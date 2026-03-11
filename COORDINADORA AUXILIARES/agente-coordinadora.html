@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente Coordinadora · Ilunion Vida Senior</title>
+<meta name="theme-color" content="#001830">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agente IVS">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #001830;
+  --bg2: #002448;
+  --bg3: #003060;
+  --border: #004080;
+  --terracota: #0099CC;
+  --terracota-glow: rgba(0,153,204,0.15);
+  --terracota-dim: #006699;
+  --sage: #FFCC00;
+  --sage-dim: #CC9900;
+  --amber: #FFCC00;
+  --amber-dim: #996600;
+  --red: #E05555;
+  --red-dim: #6B2020;
+  --blue: #66CCFF;
+  --text: #F0F6FF;
+  --text-soft: #7AABCC;
+  --text-dim: #3A6688;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* GRAIN OVERLAY */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:0; opacity:0.5;
+}
+
+/* HEADER */
+header {
+  position: sticky; top:0; z-index:100;
+  background: rgba(15,13,11,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.logo {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0099CC, #003399);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px var(--terracota-glow);
+}
+.header-text h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+.header-text p { font-size: 11px; color: var(--text-soft); font-weight: 300; }
+.status-dot {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--text-soft);
+}
+.dot-alive {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #FFCC00;
+  box-shadow: 0 0 8px #FFCC00;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* MAIN LAYOUT */
+.app {
+  position: relative; z-index: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  gap: 16px;
+}
+
+/* AGENT PANEL - central piece */
+.agent-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.agent-header {
+  background: linear-gradient(135deg, var(--bg3) 0%, rgba(212,132,90,0.08) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.agent-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--terracota-dim), var(--bg3));
+  border: 1.5px solid var(--terracota-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.agent-info h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 16px; font-weight: 600;
+  color: var(--terracota);
+}
+.agent-info p { font-size: 12px; color: var(--text-soft); }
+.agent-run-btn {
+  margin-left: auto;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--terracota), var(--terracota-dim));
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 7px;
+  white-space: nowrap;
+}
+.agent-run-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--terracota-glow); }
+.agent-run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* SITUACION INPUT */
+.situacion-area {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.situacion-area label {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  display: block; margin-bottom: 8px;
+}
+.situacion-area textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  resize: none;
+  min-height: 80px;
+  outline: none;
+  transition: border 0.2s;
+}
+.situacion-area textarea:focus { border-color: var(--terracota-dim); }
+.situacion-area textarea::placeholder { color: var(--text-dim); }
+
+/* STEPS OUTPUT */
+.steps-area {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 60px;
+}
+
+.step {
+  display: flex; gap: 12px; align-items: flex-start;
+  animation: stepIn 0.4s ease forwards;
+  opacity: 0;
+}
+@keyframes stepIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:none} }
+
+.step-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-running .step-icon { background: rgba(232,184,75,0.15); border: 1px solid var(--amber-dim); }
+.step-done .step-icon { background: rgba(127,175,150,0.15); border: 1px solid var(--sage-dim); }
+.step-alert .step-icon { background: rgba(224,85,85,0.15); border: 1px solid var(--red-dim); }
+
+.step-body { flex: 1; }
+.step-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.step-detail {
+  font-size: 12px; color: var(--text-soft);
+  line-height: 1.6;
+}
+.step-spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid var(--amber-dim);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* RESULTS CARDS */
+.results-area {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.result-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  animation: cardIn 0.5s ease forwards;
+  opacity: 0;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+.result-card-header {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.result-card-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.rc-red .result-card-icon { background: rgba(224,85,85,0.12); }
+.rc-amber .result-card-icon { background: rgba(232,184,75,0.12); }
+.rc-sage .result-card-icon { background: rgba(127,175,150,0.12); }
+.rc-blue .result-card-icon { background: rgba(107,159,212,0.12); }
+
+.result-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 600;
+}
+.rc-red .result-card-title { color: var(--red); }
+.rc-amber .result-card-title { color: var(--amber); }
+.rc-sage .result-card-title { color: var(--sage); }
+.rc-blue .result-card-title { color: var(--blue); }
+
+.result-card-body { padding: 14px 16px; font-size: 13px; line-height: 1.75; color: var(--text-soft); }
+.result-card-body strong { color: var(--text); }
+
+/* MODULE GRID */
+.modulo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.modulo-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.modulo-item.cojo { border-color: var(--red-dim); background: rgba(224,85,85,0.06); }
+.modulo-item.completo { border-color: var(--sage-dim); }
+.modulo-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.modulo-count { font-size: 20px; font-weight: 700; font-family: 'Fraunces', serif; }
+.modulo-item.cojo .modulo-count { color: var(--red); }
+.modulo-item.completo .modulo-count { color: var(--sage); }
+.modulo-label { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+/* SUGERENCIAS LLAMADAS */
+.llamada-item {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.llamada-item:last-child { border-bottom: none; }
+.llamada-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.llamada-info { flex: 1; }
+.llamada-info strong { display: block; font-size: 13px; color: var(--text); }
+.llamada-info span { font-size: 11px; color: var(--text-soft); }
+.llamada-razon {
+  font-size: 11px; padding: 3px 8px; border-radius: 20px;
+  background: rgba(127,175,150,0.1);
+  color: var(--sage);
+  border: 1px solid var(--sage-dim);
+  white-space: nowrap;
+}
+
+/* MENSAJE REDACTADO */
+.mensaje-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  position: relative;
+  margin-top: 8px;
+}
+.copy-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.copy-btn:hover { color: var(--text); border-color: var(--terracota-dim); }
+
+/* PATRONES */
+.patron-bar-wrap { margin: 8px 0; }
+.patron-label {
+  display: flex; justify-content: space-between;
+  font-size: 12px; margin-bottom: 5px;
+}
+.patron-label span:first-child { color: var(--text); }
+.patron-label span:last-child { color: var(--text-soft); }
+.patron-bar-bg {
+  height: 8px; background: var(--bg2);
+  border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.patron-bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 1s ease;
+}
+
+/* EQUIPO QUICK VIEW */
+.equipo-quick {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px 20px;
+}
+.equipo-quick h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.turno-row {
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.turno-pill {
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+  min-width: 64px; text-align: center;
+}
+.tp-M { background: rgba(212,132,90,0.15); color: var(--terracota); border: 1px solid var(--terracota-dim); }
+.tp-T { background: rgba(127,175,150,0.15); color: var(--sage); border: 1px solid var(--sage-dim); }
+.tp-N { background: rgba(107,159,212,0.15); color: var(--blue); border: 1px solid #2E4F7A; }
+.aux-mini {
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.aux-mini:hover { border-color: var(--terracota-dim); color: var(--text); }
+.aux-mini.ausente-hoy {
+  background: rgba(224,85,85,0.08);
+  border-color: var(--red-dim);
+  color: var(--red);
+  text-decoration: line-through;
+}
+.add-turno-btn {
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.add-turno-btn:hover { border-color: var(--terracota-dim); color: var(--terracota); }
+
+/* AUSENCIAS RAPIDAS */
+.ausencia-quick {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px 20px;
+}
+.ausencia-quick h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.quick-form {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 10px;
+}
+.quick-form select, .quick-form input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; color: var(--text);
+  outline: none;
+  transition: border 0.2s;
+}
+.quick-form select:focus, .quick-form input:focus { border-color: var(--terracota-dim); }
+.quick-form option { background: var(--bg3); }
+
+.btn-ausencia {
+  width: 100%; padding: 10px;
+  background: linear-gradient(135deg, rgba(224,85,85,0.2), rgba(224,85,85,0.08));
+  border: 1px solid var(--red-dim);
+  border-radius: 10px;
+  color: var(--red);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ausencia:hover { background: rgba(224,85,85,0.2); }
+
+.ausencia-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: rgba(224,85,85,0.07);
+  border: 1px solid var(--red-dim);
+  border-radius: 10px;
+  font-size: 12px; color: var(--text-soft);
+  margin-bottom: 6px;
+  animation: cardIn 0.3s ease forwards;
+}
+.ausencia-badge strong { color: var(--red); }
+.ausencia-badge button {
+  margin-left: auto; background: none; border: none;
+  color: var(--text-dim); cursor: pointer; font-size: 14px;
+}
+
+/* GESTIÓN RECHAZOS */
+.cobertura-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 0;
+}
+.cobertura-header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--bg3), rgba(224,85,85,0.08));
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.cobertura-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 15px; color: var(--red);
+  flex: 1;
+}
+.cobertura-header span { font-size: 12px; color: var(--text-soft); }
+
+.llamada-activa {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.llamada-activa-label {
+  font-size: 11px; font-weight: 600; color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.llamada-activa-persona {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px;
+  background: rgba(127,175,150,0.07);
+  border: 1px solid var(--sage-dim);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  animation: cardIn 0.4s ease forwards;
+}
+.llamada-activa-persona .avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.llamada-activa-persona .info strong { display: block; font-size: 14px; color: var(--text); }
+.llamada-activa-persona .info span { font-size: 12px; color: var(--text-soft); }
+.llamada-activa-persona .tel {
+  margin-left: auto;
+  font-size: 13px; color: var(--sage);
+  font-weight: 600;
+}
+
+.respuesta-btns {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  margin-bottom: 10px;
+}
+.btn-respuesta {
+  padding: 10px 8px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.btn-si { background: rgba(127,175,150,0.15); color: var(--sage); border: 1px solid var(--sage-dim) !important; }
+.btn-si:hover { background: rgba(127,175,150,0.3); }
+.btn-nopuede { background: rgba(232,184,75,0.12); color: var(--amber); border: 1px solid var(--amber-dim) !important; }
+.btn-nopuede:hover { background: rgba(232,184,75,0.25); }
+.btn-noquiere { background: rgba(224,85,85,0.12); color: var(--red); border: 1px solid var(--red-dim) !important; }
+.btn-noquiere:hover { background: rgba(224,85,85,0.25); }
+
+.motivo-input {
+  display: none;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.motivo-input.visible { display: flex; }
+.motivo-input input {
+  flex: 1;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text);
+  outline: none;
+}
+.motivo-input input:focus { border-color: var(--terracota-dim); }
+.motivo-input button {
+  padding: 9px 14px; border-radius: 10px;
+  background: var(--terracota); color: white;
+  border: none; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+
+/* HISTORIAL LLAMADAS */
+.historial-llamadas { padding: 14px 20px; }
+.historial-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  animation: cardIn 0.3s ease forwards;
+}
+.historial-item:last-child { border-bottom: none; }
+.hist-estado {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.hist-si { background: rgba(127,175,150,0.15); }
+.hist-nopuede { background: rgba(232,184,75,0.12); }
+.hist-noquiere { background: rgba(224,85,85,0.12); }
+.hist-info { flex: 1; }
+.hist-info strong { color: var(--text); display: block; }
+.hist-info span { color: var(--text-soft); font-size: 11px; }
+.hist-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 20px;
+  font-weight: 600;
+}
+.tag-si { background: rgba(127,175,150,0.15); color: var(--sage); }
+.tag-nopuede { background: rgba(232,184,75,0.12); color: var(--amber); }
+.tag-noquiere { background: rgba(224,85,85,0.12); color: var(--red); }
+
+.sin-cobertura {
+  padding: 16px;
+  background: rgba(224,85,85,0.07);
+  border: 1px solid var(--red-dim);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px; color: var(--text-soft);
+  margin: 14px 20px;
+}
+.sin-cobertura strong { color: var(--red); display: block; margin-bottom: 6px; font-size: 15px; }
+
+/* REDISTRIBUCIÓN */
+.redistrib-panel {
+  background: var(--bg2);
+  border: 1px solid var(--red-dim);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.redistrib-header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(224,85,85,0.1), var(--bg3));
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.redistrib-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 15px; color: var(--red); flex: 1;
+}
+.redistrib-body { padding: 16px 20px; }
+.aux-carga-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  margin-bottom: 8px;
+  animation: cardIn 0.4s ease forwards;
+  opacity: 0;
+}
+.carga-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.carga-info { flex: 1; }
+.carga-info strong { display: block; font-size: 13px; color: var(--text); }
+.carga-info span { font-size: 11px; color: var(--text-soft); }
+.carga-extra { text-align: right; }
+.carga-tag {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; display: block; margin-bottom: 3px;
+}
+.carga-alta { background: rgba(224,85,85,0.15); color: var(--red); border: 1px solid var(--red-dim); }
+.carga-media { background: rgba(232,184,75,0.15); color: var(--amber); border: 1px solid var(--amber-dim); }
+.carga-normal { background: rgba(127,175,150,0.15); color: var(--sage); border: 1px solid var(--sage-dim); }
+.carga-residentes { font-size: 10px; color: var(--text-dim); }
+.parte-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px; line-height: 1.9;
+  color: var(--text);
+  white-space: pre-wrap;
+  margin-top: 10px;
+  position: relative;
+}
+.btn-generar-redistrib {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, rgba(224,85,85,0.2), rgba(224,85,85,0.08));
+  border: 1px solid var(--red-dim);
+  border-radius: 12px;
+  color: var(--red);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-generar-redistrib:hover { background: rgba(224,85,85,0.25); }
+.btn-generar-redistrib:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* DIVIDER */
+.divider { border:none; border-top:1px solid var(--border); margin: 12px 0; }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center; padding: 30px 20px;
+  color: var(--text-dim); font-size: 13px;
+}
+.empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+/* ADD AUX MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  display: none;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  width: 90%; max-width: 380px;
+}
+.modal h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 16px; color: var(--text);
+  margin-bottom: 16px;
+}
+.modal input, .modal select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; color: var(--text);
+  outline: none; margin-bottom: 10px;
+}
+.modal input:focus, .modal select:focus { border-color: var(--terracota-dim); }
+.modal option { background: var(--bg3); }
+.modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+.modal-btns button {
+  flex: 1; padding: 10px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none;
+}
+.btn-confirm { background: var(--terracota); color: white; }
+.btn-cancel { background: var(--bg3); color: var(--text-soft); border: 1px solid var(--border) !important; }
+</style>
+</head>
+<body>
+
+<!-- MODAL CLAVE API -->
+<div id="apiKeyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,10,30,0.95);backdrop-filter:blur(8px);align-items:center;justify-content:center;flex-direction:column;padding:24px">
+  <div style="background:#002448;border:1px solid #004080;border-radius:24px;padding:32px 28px;width:100%;max-width:400px;text-align:center">
+    <div style="font-size:42px;margin-bottom:16px">🔑</div>
+    <h2 style="font-family:'Fraunces',serif;font-size:22px;color:#F0F6FF;margin-bottom:8px">Bienvenida, coordinadora</h2>
+    <p style="font-size:13px;color:#7AABCC;line-height:1.6;margin-bottom:24px">Para usar el agente necesitas tu clave de API de Anthropic. Solo te la pediremos <strong style="color:#0099CC">una vez</strong> — quedará guardada en este dispositivo.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="width:100%;background:#003060;border:1px solid #004080;border-radius:12px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:#F0F6FF;outline:none;margin-bottom:8px;letter-spacing:0.5px">
+    <p style="font-size:11px;color:#3A6688;margin-bottom:20px">La clave empieza por <code style="color:#0099CC">sk-ant-</code> y la encuentras en console.anthropic.com</p>
+    <button onclick="guardarClave()" style="width:100%;background:linear-gradient(135deg,#0099CC,#003399);border:none;border-radius:12px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:white;cursor:pointer;margin-bottom:10px">
+      Guardar y entrar →
+    </button>
+    <p id="apiKeyError" style="font-size:12px;color:#E05555;display:none;margin-top:4px">La clave no parece válida. Comprueba que empieza por sk-ant-</p>
+  </div>
+</div>
+
+<header>
+  <div class="logo">🤖</div>
+  <div class="header-text">
+    <h1>Agente Coordinadora</h1>
+    <p>Ilunion Vida Senior · Parla</p>
+  </div>
+  <div class="status-dot">
+    <div class="dot-alive"></div>
+    Agente activo
+  </div>
+  <button onclick="borrarClave()" title="Cambiar clave API" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:4px 8px;margin-left:auto">🔑</button>
+</header>
+
+<div class="app">
+
+  <!-- PANEL AGENTE -->
+  <div class="agent-panel">
+    <div class="agent-header">
+      <div class="agent-icon">🧠</div>
+      <div class="agent-info">
+        <h2>Agente de Análisis Autónomo</h2>
+        <p>Detecta, sugiere y redacta solo · Actualizado en tiempo real</p>
+      </div>
+      <button class="agent-run-btn" id="runBtn" onclick="runAgent()">
+        <span id="runBtnIcon">▶</span> Analizar ahora
+      </button>
+    </div>
+
+    <div class="situacion-area">
+      <label>Describe la situación (opcional · el agente también analiza el cuadrante solo)</label>
+      <textarea id="situacionInput" placeholder="Ej: Esta mañana ha llamado Ana García diciendo que no puede venir al turno de tarde del módulo 3. No tenemos suplente..."></textarea>
+    </div>
+
+    <div class="steps-area" id="stepsArea">
+      <div class="empty-state">
+        <div class="icon">⚡</div>
+        Pulsa <strong>"Analizar ahora"</strong> para que el agente revise el equipo, detecte huecos y genere recomendaciones
+      </div>
+    </div>
+
+    <div class="results-area" id="resultsArea"></div>
+  </div>
+
+  <!-- EQUIPO QUICK VIEW -->
+  <div class="equipo-quick">
+    <h3>👥 Estado del equipo <span style="font-size:11px;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-weight:400">(toca para marcar ausente)</span></h3>
+    <div id="equipoView"></div>
+    <button class="add-turno-btn" onclick="openModal()" style="margin-top:8px">+ Añadir auxiliar</button>
+  </div>
+
+  <!-- GESTIÓN COBERTURA -->
+  <div class="cobertura-panel" id="coberturaPanel" style="display:none">
+    <div class="cobertura-header">
+      <span style="font-size:20px">📞</span>
+      <h3>Gestión de cobertura en curso</h3>
+      <span id="coberturaInfo"></span>
+    </div>
+    <div class="llamada-activa" id="llamadaActiva"></div>
+    <div class="historial-llamadas" id="historialLlamadas" style="display:none">
+      <div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Registro de llamadas</div>
+      <div id="historialItems"></div>
+    </div>
+  </div>
+
+  <!-- PANEL SIN COBERTURA -->
+  <div class="redistrib-panel" id="redistribPanel" style="display:none">
+    <div class="redistrib-header">
+      <span style="font-size:22px">🚨</span>
+      <h3>Sin cobertura — Plan de redistribución</h3>
+    </div>
+    <div class="redistrib-body">
+      <p style="font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.6">
+        No hay nadie disponible para cubrir el hueco. El agente va a calcular el reparto más <strong style="color:var(--text)">equitativo posible</strong> para que nadie se sobre cargue más que las demás.
+      </p>
+      <div id="redistribSelect" style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px">Turno y módulo sin cobertura</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <select id="rd-turno" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+            <option value="M">🌅 Mañana</option>
+            <option value="T">☀️ Tarde</option>
+            <option value="N">🌙 Noche</option>
+          </select>
+          <select id="rd-modulo" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+            <option>Psico</option>
+            <option>Módulo 1</option>
+            <option>Módulo 2</option>
+            <option>Módulo 3</option>
+            <option>Módulo 4</option>
+            <option>Módulo 5</option>
+            <option>Módulo 6</option>
+            <option>Módulo 7</option>
+            <option>Módulo 8</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-generar-redistrib" id="btnRedistrib" onclick="generarRedistribucion()">
+        🤖 Generar plan de redistribución equitativo
+      </button>
+      <div id="redistribResultado" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- AUSENCIAS Y PLANIFICACIÓN -->
+  <div class="ausencia-quick">
+    <h3>
+      <span>📋 Registrar ausencia o planificación</span>
+      <span id="badge-ausentes" style="font-size:12px;color:var(--red);font-family:'DM Sans',sans-serif;font-weight:400"></span>
+    </h3>
+
+    <!-- Leyenda de tipos -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(224,85,85,0.15);color:#E05555;border:1px solid #6B2020;font-weight:600">🔴 IT Baja</span>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(107,159,212,0.15);color:#6B9FD4;border:1px solid #2E4F7A;font-weight:600">🔵 VAC Vacaciones</span>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid #7A5E1A;font-weight:600">🟡 AP Asuntos propios</span>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(127,175,150,0.15);color:#7FAF96;border:1px solid #3A6B55;font-weight:600">🟢 DR Día retribuido</span>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(139,107,174,0.15);color:#B48ED4;border:1px solid #5A3A7A;font-weight:600">🟣 MAT/PAT Maternidad</span>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(212,132,90,0.15);color:#D4845A;border:1px solid #8A5035;font-weight:600">🟠 REG Regulación horas</span>
+    </div>
+
+    <div class="quick-form">
+      <select id="qa-aux">
+        <option value="">Auxiliar...</option>
+      </select>
+      <select id="qa-turno">
+        <option value="M">🌅 Mañana</option>
+        <option value="T">☀️ Tarde</option>
+        <option value="N">🌙 Noche</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Fecha inicio</label>
+        <input type="date" id="qa-fecha" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Fecha fin (si dura varios días)</label>
+        <input type="date" id="qa-fecha-fin" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Tipo de ausencia</label>
+      <select id="qa-motivo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none" onchange="actualizarColorTipo(this.value)">
+        <option value="">— Selecciona tipo —</option>
+        <option value="IT">🔴 IT — Baja médica (imprevista)</option>
+        <option value="VAC">🔵 VAC — Vacaciones programadas</option>
+        <option value="AP">🟡 AP — Asuntos propios</option>
+        <option value="DR">🟢 DR — Día retribuido</option>
+        <option value="MAT">🟣 MAT — Maternidad / Paternidad</option>
+        <option value="REG">🟠 REG — Regulación de horas</option>
+        <option value="OTR">⚪ OTR — Otro</option>
+      </select>
+    </div>
+
+    <div id="tipo-info-box" style="display:none;padding:10px 13px;border-radius:10px;font-size:12px;margin-bottom:10px;line-height:1.6"></div>
+
+    <button class="btn-ausencia" onclick="registrarAusenciaRapida()" id="btnRegistrarAus">
+      📋 Registrar y actualizar planilla
+    </button>
+    <div id="lista-ausencias-rapidas" style="margin-top:10px"></div>
+  </div>
+
+  <!-- PLANILLA SEMANAL -->
+  <div class="ausencia-quick" id="secPlanilla">
+    <h3><span>📅 Planilla semanal</span></h3>
+    <p style="font-size:12px;color:var(--text-soft);margin-bottom:12px;line-height:1.6">Genera automáticamente la planilla de la semana basada en el cuadrante trimestral y las ausencias registradas.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Semana</label>
+        <input type="week" id="pl-semana" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Turno</label>
+        <select id="pl-turno" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+          <option value="todos">Todos los turnos</option>
+          <option value="M">🌅 Mañana</option>
+          <option value="T">☀️ Tarde</option>
+          <option value="N">🌙 Noche</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-ausencia" id="btnPlanilla" onclick="generarPlanilla()" style="background:linear-gradient(135deg,rgba(107,159,212,0.2),rgba(107,159,212,0.05));border-color:#2E4F7A;color:var(--blue)">
+      📅 Generar planilla semanal con IA
+    </button>
+    <div id="planillaResultado" style="margin-top:12px"></div>
+  </div>
+
+  <!-- INCIDENCIAS -->
+  <div class="ausencia-quick" id="secIncidencias">
+    <h3><span>📝 Registro de incidencias</span></h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Fecha</label>
+        <input type="date" id="inc-fecha" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Turno</label>
+        <select id="inc-turno" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+          <option value="M">🌅 Mañana</option>
+          <option value="T">☀️ Tarde</option>
+          <option value="N">🌙 Noche</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Módulo y residente afectado</label>
+      <input type="text" id="inc-residente" placeholder="Ej: Módulo 3 · Residente: Carmen R." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Tipo de incidencia</label>
+      <select id="inc-tipo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+        <option value="">— Selecciona —</option>
+        <option>Caída</option>
+        <option>Agitación / conducta</option>
+        <option>Negativa a comer</option>
+        <option>Negativa a medicación</option>
+        <option>Úlcera o lesión cutánea</option>
+        <option>Desorientación severa</option>
+        <option>Conflicto entre residentes</option>
+        <option>Queja de familia</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Descripción</label>
+      <textarea id="inc-descripcion" placeholder="Describe lo ocurrido con detalle..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;resize:none;min-height:70px"></textarea>
+    </div>
+    <button class="btn-ausencia" onclick="registrarIncidencia()" style="background:linear-gradient(135deg,rgba(139,107,174,0.2),rgba(139,107,174,0.05));border-color:#5A3A7A;color:#B48ED4">
+      📝 Registrar y generar parte con IA
+    </button>
+    <div id="listaIncidencias" style="margin-top:12px"></div>
+  </div>
+
+  <!-- INFORME SEMANAL -->
+  <div class="ausencia-quick" id="secInforme">
+    <h3><span>📊 Informe semanal automático</span></h3>
+    <p style="font-size:12px;color:var(--text-soft);margin-bottom:12px;line-height:1.6">El agente analiza toda la semana y genera un informe completo para dirección o RRHH.</p>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Semana a informar</label>
+      <input type="week" id="inf-semana" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+    </div>
+    <button class="btn-ausencia" id="btnInforme" onclick="generarInforme()" style="background:linear-gradient(135deg,rgba(232,184,75,0.15),rgba(232,184,75,0.05));border-color:var(--amber-dim);color:var(--amber)">
+      📊 Generar informe semanal completo
+    </button>
+    <div id="informeResultado" style="margin-top:12px"></div>
+  </div>
+
+</div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>➕ Añadir auxiliar</h3>
+    <input type="text" id="m-nombre" placeholder="Nombre completo">
+    <select id="m-turno">
+      <option value="M">🌅 Mañana</option>
+      <option value="T">☀️ Tarde</option>
+      <option value="N">🌙 Noche</option>
+    </select>
+    <input type="text" id="m-modulo" placeholder="Módulo (ej: Módulo 2)">
+    <input type="text" id="m-tel" placeholder="Teléfono">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="addAux()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ CLAVE API ============
+const API_KEY_STORAGE = 'ilunion_agente_apikey';
+
+function getApiKey(){
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
+function guardarClave(){
+  const input = document.getElementById('apiKeyInput').value.trim();
+  const error = document.getElementById('apiKeyError');
+  if(!input.startsWith('sk-ant-')){
+    error.style.display='block';
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE, input);
+  document.getElementById('apiKeyModal').style.display='none';
+}
+
+function borrarClave(){
+  if(confirm('¿Segura que quieres borrar la clave guardada? Tendrás que introducirla de nuevo.')){
+    localStorage.removeItem(API_KEY_STORAGE);
+    location.reload();
+  }
+}
+
+// Mostrar modal si no hay clave guardada
+window.addEventListener('DOMContentLoaded', ()=>{
+  if(!getApiKey()){
+    document.getElementById('apiKeyModal').style.display='flex';
+  }
+  // Enter key en el input
+  document.getElementById('apiKeyInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter') guardarClave();
+  });
+});
+
+// ============ DATOS ============
+const colores = ["#C1714F","#7A9E8E","#5B6FA0","#8B6BAE","#C4924A","#4A8FA8","#A07A5F","#5F7A40","#A8614A","#5A8FAA"];
+function col(i){ return colores[i % colores.length]; }
+
+// ESTRUCTURA REAL ILUNION VIDA SENIOR PARLA
+// Psico (Módulo 1) = siempre mínimo 2 auxiliares en M y T, 1 exclusiva en N
+// Módulos 2,5,6 = más residentes → mínimo 2 en M y T
+// Módulos 3,4,7,8,9 = menos residentes → mínimo 1 en M y T
+// Noche: 1 en Psico + 1 en 1ªplanta (2-5) + 1 de apoyo 1ª/2ª + 1 en 2ªplanta (6-9)
+const MODULOS = [
+  //               minM  minT  minN
+  {nombre:"Psico",    planta:"psico",    minM:2, minMmax:2, minT:2, minN:1, nocheRol:"exclusiva", residentes:"alto"},
+  {nombre:"Módulo 2", planta:"primera",  minM:2, minMmax:2, minT:2, minN:1, nocheRol:"primera",   residentes:"alto"},
+  {nombre:"Módulo 3", planta:"primera",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"primera",   residentes:"bajo"},
+  {nombre:"Módulo 4", planta:"primera",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"primera",   residentes:"bajo"},
+  {nombre:"Módulo 5", planta:"primera",  minM:3, minMmax:4, minT:2, minN:1, nocheRol:"apoyo",     residentes:"alto"},
+  {nombre:"Módulo 6", planta:"segunda",  minM:2, minMmax:2, minT:2, minN:1, nocheRol:"segunda",   residentes:"alto"},
+  {nombre:"Módulo 7", planta:"segunda",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"segunda",   residentes:"bajo"},
+  {nombre:"Módulo 8", planta:"segunda",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"segunda",   residentes:"bajo"},
+  {nombre:"Módulo 9", planta:"segunda",  minM:2, minMmax:3, minT:2, minN:1, nocheRol:"segunda",   residentes:"alto"},
+];
+
+// Helper: mínimo requerido por módulo y turno
+function getMinimoModulo(nombreModulo, turno){
+  const m = MODULOS.find(x=>x.nombre===nombreModulo);
+  if(!m) return 1;
+  if(turno==='M') return m.minM;
+  if(turno==='T') return m.minT;
+  if(turno==='N') return m.minN;
+  return 1;
+}
+
+function getMaximoHabitual(nombreModulo, turno){
+  const m = MODULOS.find(x=>x.nombre===nombreModulo);
+  if(!m || turno!=='M') return null;
+  return m.minMmax > m.minM ? m.minMmax : null;
+}
+
+// Helper: descripción de alerta según criticidad
+function alertaModulo(nombreModulo, turno, presentes, minimo){
+  if(presentes >= minimo) return null;
+  const faltantes = minimo - presentes;
+  const esPsicoTarde = nombreModulo === 'Psico' && turno === 'T';
+  const esPsico = nombreModulo === 'Psico';
+
+  let nivel, mensaje;
+  if(esPsicoTarde && presentes < 2){
+    nivel = '🔴 CRÍTICO';
+    mensaje = '⚠️ REGLA DE ORO: Psico tarde nunca puede quedarse con menos de 2. Una sola auxiliar tendría que acostar a 16 residentes de psicogeriátrico. Buscar cobertura externa urgente.';
+  } else if(esPsico || faltantes > 1){
+    nivel = '🔴 CRÍTICO';
+    mensaje = null;
+  } else {
+    nivel = '🟠 ALERTA';
+    mensaje = null;
+  }
+  return {nivel, mensaje, faltantes, minimo, presentes, modulo: nombreModulo, turno};
+}
+
+let auxiliares = [
+  // ===== MAÑANA =====
+  // Psico(2) | Mód2(2) | Mód3(1) | Mód4(1) | Mód5(3) | Mód6(2) | Mód7(1) | Mód8(1) | Mód9(2)
+  {id:1, nombre:"María García",     turno:"M", modulo:"Psico",    tel:""},
+  {id:2, nombre:"Ana Martínez",     turno:"M", modulo:"Psico",    tel:""},
+  {id:3, nombre:"Laura Sánchez",    turno:"M", modulo:"Módulo 2", tel:""},
+  {id:4, nombre:"Carmen López",     turno:"M", modulo:"Módulo 2", tel:""},
+  {id:5, nombre:"Isabel Fernández", turno:"M", modulo:"Módulo 3", tel:""},
+  {id:6, nombre:"Rosa Jiménez",     turno:"M", modulo:"Módulo 4", tel:""},
+  {id:7, nombre:"Pilar Ruiz",       turno:"M", modulo:"Módulo 5", tel:""},
+  {id:8, nombre:"Lucía Hernández",  turno:"M", modulo:"Módulo 5", tel:""},
+  {id:9, nombre:"Marta Díaz",       turno:"M", modulo:"Módulo 5", tel:""},
+  {id:10,nombre:"Elena Moreno",     turno:"M", modulo:"Módulo 6", tel:""},
+  {id:11,nombre:"Sara Torres",      turno:"M", modulo:"Módulo 6", tel:""},
+  {id:12,nombre:"Nuria Ramírez",    turno:"M", modulo:"Módulo 7", tel:""},
+  {id:13,nombre:"Patricia Castro",  turno:"M", modulo:"Módulo 8", tel:""},
+  {id:14,nombre:"Cristina Ortega",  turno:"M", modulo:"Módulo 9", tel:""},
+  {id:15,nombre:"Vanesa Rubio",     turno:"M", modulo:"Módulo 9", tel:""},
+
+  // ===== TARDE =====
+  // Misma estructura de mínimos que mañana
+  {id:15,nombre:"Vanesa Rubio",     turno:"T", modulo:"Psico",    tel:""},
+  {id:16,nombre:"Beatriz Navarro",  turno:"T", modulo:"Psico",    tel:""},
+  {id:17,nombre:"Silvia Morales",   turno:"T", modulo:"Módulo 2", tel:""},
+  {id:18,nombre:"Raquel Domínguez", turno:"T", modulo:"Módulo 2", tel:""},
+  {id:19,nombre:"Alicia Vargas",    turno:"T", modulo:"Módulo 3", tel:""},
+  {id:20,nombre:"Mónica Iglesias",  turno:"T", modulo:"Módulo 4", tel:""},
+  {id:21,nombre:"Yolanda Serrano",  turno:"T", modulo:"Módulo 5", tel:""},
+  {id:22,nombre:"Amparo Blanco",    turno:"T", modulo:"Módulo 5", tel:""},
+  {id:23,nombre:"Consuelo Cano",    turno:"T", modulo:"Módulo 6", tel:""},
+  {id:24,nombre:"Dolores Prieto",   turno:"T", modulo:"Módulo 6", tel:""},
+  {id:25,nombre:"Encarna Méndez",   turno:"T", modulo:"Módulo 7", tel:""},
+  {id:26,nombre:"Fátima Herrera",   turno:"T", modulo:"Módulo 8", tel:""},
+  {id:27,nombre:"Ginés Molina",     turno:"T", modulo:"Módulo 9", tel:""},
+  {id:28,nombre:"Helena Reyes",     turno:"T", modulo:"Módulo 9", tel:""},
+
+  // ===== NOCHE: 4 auxiliares con roles fijos =====
+  // 1 exclusiva Psico | 1 primera planta (Mód 2-5) | 1 apoyo primera+segunda | 1 segunda planta (Mód 6-9)
+  {id:29,nombre:"Natalia Pérez",    turno:"N", modulo:"Psico",                          nocheRol:"exclusiva-psico", tel:""},
+  {id:30,nombre:"Olga Fuentes",     turno:"N", modulo:"Primera planta (Mód 2-5)",       nocheRol:"primera",         tel:""},
+  {id:31,nombre:"Paula Serrano",    turno:"N", modulo:"Apoyo primera+segunda (Mód 2-9)", nocheRol:"apoyo",           tel:""},
+  {id:32,nombre:"Queralt Vidal",    turno:"N", modulo:"Segunda planta (Mód 6-9)",       nocheRol:"segunda",         tel:""},
+];
+
+let ausencias = [];
+let nextId = 33;
+
+const hoy = new Date().toISOString().slice(0,10);
+document.getElementById('qa-fecha').value = hoy;
+
+// ============ EQUIPO VIEW ============
+// ============ TIPOS DE AUSENCIA ============
+const TIPOS_AUSENCIA = {
+  IT:  { label:'IT · Baja médica',         color:'#E05555', bg:'rgba(224,85,85,0.15)',  border:'#6B2020', urgente:true,  info:'Baja médica imprevista. El agente generará alerta urgente y buscará cobertura.' },
+  VAC: { label:'VAC · Vacaciones',          color:'#6B9FD4', bg:'rgba(107,159,212,0.15)',border:'#2E4F7A', urgente:false, info:'Vacaciones programadas. El agente las incluye en la planilla sin generar alerta de emergencia.' },
+  AP:  { label:'AP · Asuntos propios',      color:'#E8B84B', bg:'rgba(232,184,75,0.15)', border:'#7A5E1A', urgente:false, info:'Día de asuntos propios. Se descuenta del saldo disponible del trabajador.' },
+  DR:  { label:'DR · Día retribuido',       color:'#7FAF96', bg:'rgba(127,175,150,0.15)',border:'#3A6B55', urgente:false, info:'Día retribuido por convenio (festivo trabajado, cumpleaños, etc.).' },
+  MAT: { label:'MAT/PAT · Maternidad',      color:'#B48ED4', bg:'rgba(139,107,174,0.15)',border:'#5A3A7A', urgente:false, info:'Permiso de maternidad o paternidad. Ausencia larga planificada.' },
+  REG: { label:'REG · Regulación de horas', color:'#D4845A', bg:'rgba(212,132,90,0.15)', border:'#8A5035', urgente:false, info:'Día de regulación por horas trabajadas de más. Ya compensado, no requiere suplente.' },
+  OTR: { label:'OTR · Otro',                color:'#9A8A78', bg:'rgba(154,138,120,0.15)',border:'#5A4E43', urgente:true,  info:'Otro tipo de ausencia. El agente valorará si necesita cobertura.' },
+};
+
+function actualizarColorTipo(val){
+  const box = document.getElementById('tipo-info-box');
+  if(!val || !TIPOS_AUSENCIA[val]){ box.style.display='none'; return; }
+  const t = TIPOS_AUSENCIA[val];
+  box.style.display='block';
+  box.style.background = t.bg;
+  box.style.border = `1px solid ${t.border}`;
+  box.style.color = t.color;
+  box.innerHTML = `<strong>${t.label}</strong><br>${t.info}`;
+}
+
+function getColorAusencia(tipo){
+  return TIPOS_AUSENCIA[tipo] ? TIPOS_AUSENCIA[tipo].color : '#9A8A78';
+}
+
+function getTipoLabel(tipo){
+  return TIPOS_AUSENCIA[tipo] ? TIPOS_AUSENCIA[tipo].label : tipo;
+}
+
+function esUrgente(tipo){
+  return TIPOS_AUSENCIA[tipo] ? TIPOS_AUSENCIA[tipo].urgente : true;
+}
+
+// Genera array de fechas entre dos fechas
+function rangoFechas(ini, fin){
+  const fechas = [];
+  const d = new Date(ini+'T12:00:00');
+  const f = new Date((fin||ini)+'T12:00:00');
+  while(d <= f){
+    fechas.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+1);
+  }
+  return fechas;
+}
+
+function getAusentesHoy(){
+  return ausencias.filter(a => {
+    const fechas = rangoFechas(a.fechaInicio, a.fechaFin);
+    return fechas.includes(hoy);
+  }).map(a=>a.auxId);
+}
+
+function renderEquipo(){
+  const ausentesHoy = getAusentesHoy();
+  const cont = document.getElementById('equipoView');
+  let html = '';
+  ['M','T','N'].forEach(t=>{
+    const label = {M:'🌅 Mañana',T:'☀️ Tarde',N:'🌙 Noche'}[t];
+    const grupo = auxiliares.filter(a=>a.turno===t);
+    html += `<div class="turno-row">
+      <span class="turno-pill tp-${t}">${label}</span>
+      ${grupo.map(a=>{
+        const ausHoy = ausencias.find(x => x.auxId===a.id && rangoFechas(x.fechaInicio,x.fechaFin).includes(hoy));
+        const color = ausHoy ? getColorAusencia(ausHoy.tipo) : '';
+        const style = ausHoy ? `style="border-color:${color};color:${color};text-decoration:line-through"` : '';
+        return `<span class="aux-mini ${ausHoy?'ausente-hoy':''}" ${style}
+          onclick="toggleAusenteHoy(${a.id})"
+          title="${a.nombre} · ${a.modulo}${ausHoy?' · '+getTipoLabel(ausHoy.tipo):''}">
+          ${a.nombre.split(' ')[0]}${ausHoy?' ('+ausHoy.tipo+')':''}
+        </span>`;
+      }).join('')}
+    </div>`;
+  });
+  cont.innerHTML = html;
+  renderAusenciasBadges();
+  updateAuxSelect();
+  updateBadgeAusentes();
+}
+
+function toggleAusenteHoy(auxId){
+  const idx = ausencias.findIndex(a => a.auxId===auxId && rangoFechas(a.fechaInicio,a.fechaFin).includes(hoy));
+  if(idx>=0){
+    ausencias.splice(idx,1);
+  } else {
+    const aux = auxiliares.find(a=>a.id===auxId);
+    ausencias.push({auxId, turno:aux.turno, fechaInicio:hoy, fechaFin:hoy, tipo:'IT', motivo:'Baja médica'});
+  }
+  renderEquipo();
+}
+
+function updateBadgeAusentes(){
+  const n = getAusentesHoy().length;
+  const badge = document.getElementById('badge-ausentes');
+  badge.textContent = n > 0 ? `${n} ausente${n>1?'s':''} hoy` : '';
+}
+
+function updateAuxSelect(){
+  const sel = document.getElementById('qa-aux');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Auxiliar...</option>';
+  auxiliares.forEach(a=>{
+    sel.innerHTML += `<option value="${a.id}">${a.nombre} (${a.turno} · ${a.modulo})</option>`;
+  });
+  sel.value = val;
+}
+
+function renderAusenciasBadges(){
+  const cont = document.getElementById('lista-ausencias-rapidas');
+  // Mostrar todas las ausencias que afectan a hoy o futuras próximas (7 días)
+  const limite = new Date(); limite.setDate(limite.getDate()+7);
+  const relevantes = ausencias.filter(a => {
+    const fin = new Date((a.fechaFin||a.fechaInicio)+'T12:00:00');
+    return fin >= new Date(hoy+'T00:00:00');
+  }).sort((a,b)=>a.fechaInicio.localeCompare(b.fechaInicio));
+
+  if(relevantes.length===0){ cont.innerHTML=''; return; }
+  cont.innerHTML = relevantes.map(a=>{
+    const aux = auxiliares.find(x=>x.id===a.auxId);
+    const t = TIPOS_AUSENCIA[a.tipo] || TIPOS_AUSENCIA.OTR;
+    const esMismaFecha = a.fechaInicio === a.fechaFin;
+    const rangoStr = esMismaFecha ? formatFechaCorta(a.fechaInicio) : `${formatFechaCorta(a.fechaInicio)} → ${formatFechaCorta(a.fechaFin)}`;
+    const dias = rangoFechas(a.fechaInicio, a.fechaFin).length;
+    return `<div class="ausencia-badge" style="border-color:${t.border};background:${t.bg}">
+      <span style="color:${t.color};font-weight:700;font-size:11px">${a.tipo}</span>
+      <strong style="color:${t.color}">${aux?aux.nombre:'?'}</strong>
+      <span style="color:var(--text-dim)">· ${rangoStr}${dias>1?' ('+dias+' días)':''}</span>
+      <button onclick="borrarAusencia(${a.auxId},'${a.fechaInicio}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function formatFechaCorta(str){
+  const d = new Date(str+'T12:00:00');
+  return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+}
+
+function registrarAusenciaRapida(){
+  const auxId = parseInt(document.getElementById('qa-aux').value);
+  const turno = document.getElementById('qa-turno').value;
+  const fechaInicio = document.getElementById('qa-fecha').value;
+  const fechaFin = document.getElementById('qa-fecha-fin').value || fechaInicio;
+  const tipo = document.getElementById('qa-motivo').value;
+
+  if(!auxId||!fechaInicio||!tipo){ alert('Selecciona auxiliar, fecha y tipo de ausencia.'); return; }
+
+  // Comprobar solapamiento
+  if(ausencias.find(a=>a.auxId===auxId && rangoFechas(a.fechaInicio,a.fechaFin).some(f=>rangoFechas(fechaInicio,fechaFin).includes(f)))){
+    alert('Ya hay una ausencia registrada para esas fechas.'); return;
+  }
+
+  const aux = auxiliares.find(a=>a.id===auxId);
+  ausencias.push({
+    auxId, turno: turno||aux.turno,
+    fechaInicio, fechaFin,
+    tipo, motivo: getTipoLabel(tipo)
+  });
+
+  renderEquipo();
+  document.getElementById('qa-aux').value='';
+  document.getElementById('qa-motivo').value='';
+  document.getElementById('qa-fecha').value=hoy;
+  document.getElementById('qa-fecha-fin').value='';
+  document.getElementById('tipo-info-box').style.display='none';
+
+  // Solo lanzar agente automáticamente si es urgente
+  if(esUrgente(tipo)){
+    setTimeout(()=>runAgent(), 400);
+  }
+}
+
+function borrarAusencia(auxId, fechaInicio){
+  ausencias = ausencias.filter(a=>!(a.auxId===auxId&&a.fechaInicio===fechaInicio));
+  renderEquipo();
+}
+
+// ============ MODAL ============
+function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function addAux(){
+  const nombre = document.getElementById('m-nombre').value.trim();
+  const turno = document.getElementById('m-turno').value;
+  const modulo = document.getElementById('m-modulo').value.trim()||'Sin módulo';
+  const tel = document.getElementById('m-tel').value.trim();
+  if(!nombre){ alert('Escribe el nombre.'); return; }
+  auxiliares.push({id:nextId++,nombre,turno,modulo,tel});
+  closeModal();
+  document.getElementById('m-nombre').value='';
+  document.getElementById('m-modulo').value='';
+  document.getElementById('m-tel').value='';
+  renderEquipo();
+}
+
+// ============ AGENTE IA ============
+async function runAgent(){
+  const btn = document.getElementById('runBtn');
+  const icon = document.getElementById('runBtnIcon');
+  btn.disabled = true;
+  icon.innerHTML = '<span class="step-spinner"></span>';
+
+  const stepsArea = document.getElementById('stepsArea');
+  const resultsArea = document.getElementById('resultsArea');
+  stepsArea.innerHTML = '';
+  resultsArea.innerHTML = '';
+
+  const situacion = document.getElementById('situacionInput').value.trim();
+  const ausentesHoy = getAusentesHoy();
+  const ausentesData = ausentesHoy.map(id=>{
+    const a = auxiliares.find(x=>x.id===id);
+    const aus = ausencias.find(x=>x.auxId===id && rangoFechas(x.fechaInicio,x.fechaFin).includes(hoy));
+    const tipo = aus ? aus.tipo : 'IT';
+    const urgente = esUrgente(tipo);
+    return a ? `${a.nombre} (${a.turno==='M'?'Mañana':a.turno==='T'?'Tarde':'Noche'}, ${a.modulo}, tipo: ${getTipoLabel(tipo)}, urgente: ${urgente?'SÍ':'NO'})` : '';
+  }).filter(Boolean);
+
+  // Construir contexto del equipo con alertas por módulo
+  const ausentesHoyIds = getAusentesHoy();
+  const modulosAnalisis = MODULOS.map(mod => {
+    const turnosAfectados = ['M','T'].map(t => {
+      const grupo = auxiliares.filter(a => a.turno === t && a.modulo === mod.nombre);
+      const presentes = grupo.filter(a => !ausentesHoyIds.includes(a.id));
+      const minimo = t === 'M' ? mod.minM : mod.minT;
+      const alerta = alertaModulo(mod.nombre, t, presentes.length, minimo);
+      if(!alerta) return null;
+      const turnoLabel = t==='M'?'Mañana':'Tarde';
+      const extra = alerta.mensaje ? ` → ${alerta.mensaje}` : '';
+      return `${turnoLabel}: ${presentes.length}/${minimo} (${alerta.nivel})${extra}`;
+    }).filter(Boolean);
+    return turnosAfectados.length > 0
+      ? `⚠️ ${mod.nombre}: ${turnosAfectados.join(' | ')}`
+      : `✅ ${mod.nombre}: cobertura correcta`;
+  }).join('\n');
+
+  // Noche aparte
+  const nocheAux = auxiliares.filter(a => a.turno === 'N');
+  const nocheAusentes = nocheAux.filter(a => ausentesHoyIds.includes(a.id));
+  const nocheStr = nocheAusentes.length > 0
+    ? `⚠️ NOCHE: falta ${nocheAusentes.map(a=>`${a.nombre} (${a.nocheRol||a.modulo})`).join(', ')}`
+    : `✅ NOCHE: cobertura completa (4 auxiliares)`;
+
+  const historial = auxiliares.map(a=>{
+    const n = ausencias.filter(x=>x.auxId===a.id).length;
+    return n>0 ? `${a.nombre}: ${n} ausencia${n>1?'s':''}` : null;
+  }).filter(Boolean).join(', ');
+
+  // Mostrar steps uno a uno mientras carga
+  const stepTitles = [
+    '🔍 Analizando el cuadrante...',
+    '🏠 Detectando módulos afectados...',
+    '👩‍⚕️ Calculando sugerencias de cobertura...',
+    '📊 Analizando patrones de ausencias...',
+    '✍️ Redactando mensajes para el equipo...',
+  ];
+  let stepInterval = null;
+  let stepIdx = 0;
+  function addStep(title){
+    const div = document.createElement('div');
+    div.className='step step-running';
+    div.style.animationDelay='0s';
+    div.innerHTML=`<div class="step-icon"><span class="step-spinner"></span></div>
+      <div class="step-body"><div class="step-title">${title}</div></div>`;
+    stepsArea.appendChild(div);
+  }
+  addStep(stepTitles[stepIdx++]);
+  stepInterval = setInterval(()=>{
+    if(stepIdx < stepTitles.length) addStep(stepTitles[stepIdx++]);
+    else clearInterval(stepInterval);
+  }, 900);
+
+  // Llamada a la IA
+  const prompt = `Eres un agente autónomo de coordinación de auxiliares geriátricas en Ilunion Vida Senior, Parla.
+
+ESTRUCTURA REAL DEL CENTRO:
+- Psico (planta especial): SIEMPRE mínimo 2 auxiliares en Mañana y Tarde, 1 EXCLUSIVA en Noche
+- ⚠️ REGLA DE ORO — PSICO TARDE: NUNCA sugerir sacar a nadie de Psico para cubrir otro módulo en tarde. Si solo queda 1 auxiliar en Psico tarde, es situación CRÍTICA inmediata — una sola auxiliar tendría que acostar a 16 residentes de psicogeriátrico, lo que es inasumible. Buscar cobertura externa siempre antes que tocar Psico tarde.
+- ⚠️ REGLA DE ORO — PSICO MAÑANA: Igual, mínimo 2 siempre. Nunca bajar de 2 en ningún turno.
+- Módulo 5 (mañana): mínimo 3, puede llegar a 4 — es el módulo con más carga matutina
+- Módulo 9 (mañana): mínimo 2, puede llegar a 3
+- Módulos 2, 6 (mañana): mínimo 2
+- Módulos 3, 4, 7, 8 (mañana): mínimo 1 — menos residentes
+- Tarde: Psico mín 2 INAMOVIBLE, módulos grandes (2,5,6,9) mín 2, módulos pequeños (3,4,7,8) mín 1
+- Noche: 4 auxiliares fijas → 1 exclusiva Psico | 1 primera planta (Mód 2-5) | 1 apoyo primera+segunda | 1 segunda planta (Mód 6-9)
+- En Psico tarde: si no falta nadie, la auxiliar "no responsable" tras acostar suele apoyar otros módulos — esto es normal y no es una alerta
+
+SITUACIÓN DESCRITA POR LA COORDINADORA:
+${situacion || "(Sin descripción adicional, analiza solo con datos del cuadrante)"}
+
+AUSENCIAS HOY (${hoy}):
+${ausentesData.length>0 ? ausentesData.join('\n') : 'Ninguna registrada'}
+
+TIPOS DE AUSENCIA — reacciona así:
+- IT y OTR: URGENTES → busca cobertura inmediata
+- VAC, AP, DR, REG, MAT/PAT: PLANIFICADAS → ajusta planilla, NO alerta de emergencia
+
+ANÁLISIS DE MÓDULOS HOY:
+${modulosAnalisis}
+${nocheStr}
+
+HISTORIAL ACUMULADO DE AUSENCIAS:
+${historial || 'Sin historial previo'}
+
+Actúa como agente autónomo. Devuelve SOLO este JSON sin texto extra ni backticks:
+{
+  "modulosCojosDetectados": [{"modulo":"string","turno":"string","auxiliaresPresentes":number,"minimoRequerido":number,"nivelAlerta":"CRÍTICO"|"ALERTA"|"OK"}],
+  "sugerenciasLlamada": [{"nombre":"string","turno":"string","modulo":"string","razon":"string","prioridad":1|2|3}],
+  "patronesDetectados": [{"descripcion":"string","nivel":"alto"|"medio"|"bajo"}],
+  "mensajeEquipo": "string (mensaje WhatsApp, tono cálido y profesional)",
+  "mensajeAuxiliarSuplente": "string (mensaje corto para pedir cobertura, empático)",
+  "resumenEjecutivo": "string (2-3 frases: situación + acciones recomendadas)"
+}`;
+
+  try {
+    const apiKey = getApiKey();
+    if(!apiKey){
+      document.getElementById('apiKeyModal').style.display='flex';
+      throw new Error('No hay clave API configurada.');
+    }
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    clearInterval(stepInterval);
+
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw = data.content.map(b=>b.text||'').join('');
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+
+    // Marcar todos los steps como done
+    document.querySelectorAll('.step').forEach(s=>{
+      s.className='step step-done';
+      s.style.opacity='1';
+      s.querySelector('.step-icon').innerHTML='✅';
+    });
+
+    renderResults(result);
+    btn.disabled=false;
+    icon.innerHTML='↺';
+
+  } catch(e){
+    clearInterval(stepInterval);
+    stepsArea.innerHTML=`<div class="step step-alert" style="opacity:1">
+      <div class="step-icon">❌</div>
+      <div class="step-body">
+        <div class="step-title">No se ha podido conectar con el agente</div>
+        <div class="step-detail" style="color:#E05555">${e.message||'Error desconocido'}. Inténtalo de nuevo.</div>
+      </div>
+    </div>`;
+    btn.disabled=false; icon.innerHTML='▶';
+  }
+}
+
+function renderResults(r){
+  const area = document.getElementById('resultsArea');
+  area.innerHTML='';
+  let delay=0;
+
+  // RESUMEN EJECUTIVO
+  if(r.resumenEjecutivo){
+    const card = makeCard('rc-amber','📋','Resumen ejecutivo',
+      `<p>${r.resumenEjecutivo}</p>`, delay);
+    area.appendChild(card);
+    delay+=100;
+  }
+
+  // MÓDULOS COJOS
+  if(r.modulosCojosDetectados){
+    const modulosUnicos2 = [...new Set(auxiliares.map(a=>a.modulo))].sort();
+    const ausentesHoy2 = getAusentesHoy();
+    let bodyHtml = '<div class="modulo-grid">';
+    modulosUnicos2.forEach(m=>{
+      const total = auxiliares.filter(a=>a.modulo===m).length;
+      const ausM = auxiliares.filter(a=>a.modulo===m && ausentesHoy2.includes(a.id)).length;
+      const activas = total - ausM;
+      const cojo = r.modulosCojosDetectados.some(x=>x.modulo===m);
+      bodyHtml += `<div class="modulo-item ${cojo?'cojo':'completo'}">
+        <div class="modulo-name">${m}</div>
+        <div class="modulo-count">${activas}/${total}</div>
+        <div class="modulo-label">${cojo?'⚠️ Cojo':'✅ Completo'}</div>
+      </div>`;
+    });
+    bodyHtml += '</div>';
+    if(r.modulosCojosDetectados.length>0){
+      bodyHtml += `<p style="margin-top:12px;font-size:12px;color:var(--red)">⚠️ Módulos con hueco: <strong>${r.modulosCojosDetectados.map(m=>m.modulo).join(', ')}</strong></p>`;
+    }
+    const card = makeCard('rc-red','🏠','Módulos detectados',bodyHtml,delay);
+    area.appendChild(card);
+    delay+=100;
+  }
+
+  // SUGERENCIAS LLAMADA
+  if(r.sugerenciasLlamada && r.sugerenciasLlamada.length>0){
+    let bodyHtml = r.sugerenciasLlamada.slice(0,5).map((s,i)=>`
+      <div class="llamada-item">
+        <div class="llamada-avatar" style="background:${col(i)}">${s.nombre.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+        <div class="llamada-info">
+          <strong>${s.nombre}</strong>
+          <span>Turno ${s.turno==='M'?'Mañana':s.turno==='T'?'Tarde':'Noche'} · ${s.modulo}</span>
+          <span style="display:block;color:var(--text-dim);font-size:11px">${s.razon}</span>
+        </div>
+        <span class="llamada-razon">Prioridad ${s.prioridad}</span>
+      </div>`).join('');
+    const card = makeCard('rc-sage','📞','A quién llamar primero',bodyHtml,delay);
+    area.appendChild(card);
+
+    // Botón nadie disponible
+    const btnCard = document.createElement('div');
+    btnCard.style.cssText = 'animation:cardIn 0.5s ease forwards;opacity:0;animation-delay:'+(delay+50)+'ms';
+    btnCard.innerHTML = `<button onclick="mostrarPanelRedistribucion()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(224,85,85,0.15),rgba(224,85,85,0.05));border:1px dashed var(--red-dim);border-radius:14px;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s" onmouseover="this.style.background='rgba(224,85,85,0.22)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(224,85,85,0.15),rgba(224,85,85,0.05))'">
+      🚨 Nadie puede venir — Generar plan de redistribución
+    </button>`;
+    area.appendChild(btnCard);
+    delay+=100;
+  }
+
+  // PATRONES
+  if(r.patronesDetectados && r.patronesDetectados.length>0){
+    const colPatron = {alto:'var(--red)',medio:'var(--amber)',bajo:'var(--sage)'};
+    let bodyHtml = r.patronesDetectados.map(p=>`
+      <div class="patron-bar-wrap">
+        <div class="patron-label">
+          <span>${p.descripcion}</span>
+          <span>${p.porcentaje}%</span>
+        </div>
+        <div class="patron-bar-bg">
+          <div class="patron-bar-fill" style="width:${p.porcentaje}%;background:${colPatron[p.nivel]||'var(--sage)'}"></div>
+        </div>
+      </div>`).join('');
+    const card = makeCard('rc-blue','📊','Patrones de ausencias detectados',bodyHtml,delay);
+    area.appendChild(card);
+    delay+=100;
+  }
+
+  // MENSAJES
+  if(r.mensajeEquipo){
+    let bodyHtml = `<p style="margin-bottom:6px;font-size:12px;color:var(--text-soft)">Mensaje para el equipo (WhatsApp / grupo):</p>
+      <div class="mensaje-box">${r.mensajeEquipo}<button class="copy-btn" onclick="copyText(this,'${encodeMsg(r.mensajeEquipo)}')">📋 Copiar</button></div>`;
+    if(r.mensajeAuxiliarSuplente){
+      bodyHtml+=`<p style="margin:14px 0 6px;font-size:12px;color:var(--text-soft)">Mensaje para pedir cobertura a una auxiliar:</p>
+        <div class="mensaje-box">${r.mensajeAuxiliarSuplente}<button class="copy-btn" onclick="copyText(this,'${encodeMsg(r.mensajeAuxiliarSuplente)}')">📋 Copiar</button></div>`;
+    }
+    const card = makeCard('rc-blue','✍️','Mensajes redactados por el agente',bodyHtml,delay);
+    area.appendChild(card);
+  }
+}
+
+function encodeMsg(s){ return encodeURIComponent(s); }
+function copyText(btn, encoded){
+  navigator.clipboard.writeText(decodeURIComponent(encoded));
+  btn.textContent='✅ Copiado';
+  setTimeout(()=>btn.textContent='📋 Copiar',2000);
+}
+
+function makeCard(cls, icon, title, bodyHtml, delay){
+  const card = document.createElement('div');
+  card.className = `result-card ${cls}`;
+  card.style.animationDelay = delay+'ms';
+  card.innerHTML=`
+    <div class="result-card-header">
+      <div class="result-card-icon">${icon}</div>
+      <div class="result-card-title">${title}</div>
+    </div>
+    <div class="result-card-body">${bodyHtml}</div>`;
+  return card;
+}
+
+// ============ REDISTRIBUCIÓN ============
+
+// Registro de carga acumulada: cuántas veces ha cubierto extras cada aux
+let cargaExtra = {}; // {auxId: número de veces que ha cubierto extra}
+
+function mostrarPanelRedistribucion(){
+  document.getElementById('redistribPanel').style.display='block';
+  document.getElementById('redistribPanel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function generarRedistribucion(){
+  const turno = document.getElementById('rd-turno').value;
+  const modulo = document.getElementById('rd-modulo').value;
+  const btn = document.getElementById('btnRedistrib');
+  const resultado = document.getElementById('redistribResultado');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(224,85,85,0.3);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite"></span> Calculando reparto equitativo...';
+  resultado.innerHTML = '';
+
+  // Calcular quién está activa en ese turno hoy
+  const ausentesHoy = getAusentesHoy();
+  const activasEnTurno = auxiliares.filter(a =>
+    a.turno === turno && !ausentesHoy.includes(a.id)
+  );
+
+  // Datos de carga para enviar a la IA
+  const cargaData = activasEnTurno.map(a => ({
+    nombre: a.nombre,
+    modulo: a.modulo,
+    vecesExtraAcumuladas: cargaExtra[a.id] || 0,
+    ausenciasHistorial: ausencias.filter(x => x.auxId === a.id).length
+  }));
+
+  const prompt = `Eres un agente de coordinación geriátrica. Necesitas hacer un plan de redistribución equitativo y humano.
+
+SITUACIÓN CRÍTICA:
+- Módulo sin cobertura: ${modulo}
+- Turno: ${turno === 'M' ? 'Mañana' : turno === 'T' ? 'Tarde' : 'Noche'}
+- No hay suplente disponible
+- Hay que repartir la carga entre las auxiliares activas del turno
+
+AUXILIARES ACTIVAS EN ESTE TURNO HOY:
+${JSON.stringify(cargaData, null, 2)}
+
+CRITERIOS DE EQUIDAD (importantes):
+1. Priorizar a quien MENOS veces ha cubierto extras acumuladas
+2. Evitar sobrecargar siempre a las mismas
+3. Repartir los residentes del módulo ausente de forma equilibrada
+4. Tener en cuenta la proximidad de módulos (módulo 1 y 2 son contiguos, etc.)
+
+Devuelve SOLO un JSON con esta estructura exacta, sin backticks:
+{
+  "planRedistribucion": [
+    {
+      "nombreAuxiliar": "string",
+      "moduloOriginal": "string",
+      "residentesExtra": number,
+      "tareaExtra": "string (descripción concreta de qué asume)",
+      "nivelCarga": "alta"|"media"|"normal",
+      "justificacion": "string (por qué a ella, máx 1 frase empática)"
+    }
+  ],
+  "resumenPlan": "string (explicación breve y humana del reparto para la coordinadora)",
+  "parteIncidencia": "string (texto formal del parte de incidencia listo para copiar, con fecha, turno, módulo afectado, personal implicado y medidas adoptadas)",
+  "recomendacionFutura": "string (1 frase de recomendación para evitar esto en el futuro)"
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const r = JSON.parse(clean);
+
+    // Actualizar carga acumulada
+    r.planRedistribucion.forEach(p => {
+      const aux = auxiliares.find(a => a.nombre === p.nombreAuxiliar);
+      if (aux) cargaExtra[aux.id] = (cargaExtra[aux.id] || 0) + 1;
+    });
+
+    renderPlanRedistribucion(r, turno, modulo);
+
+  } catch(e) {
+    resultado.innerHTML = `<div style="color:var(--red);font-size:13px;padding:12px">❌ Error al generar el plan: ${e.message}. Inténtalo de nuevo.</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Generar plan de redistribución equitativo';
+}
+
+function renderPlanRedistribucion(r, turno, modulo) {
+  const cont = document.getElementById('redistribResultado');
+  const turnoNom = turno === 'M' ? 'Mañana' : turno === 'T' ? 'Tarde' : 'Noche';
+
+  // Resumen
+  let html = `<div style="background:rgba(232,184,75,0.08);border:1px solid var(--amber-dim);border-radius:12px;padding:13px 15px;margin-bottom:12px;font-size:13px;color:var(--text-soft);line-height:1.7">
+    <strong style="color:var(--amber);display:block;margin-bottom:4px">📋 Plan para hoy · ${turnoNom} · ${modulo}</strong>
+    ${r.resumenPlan}
+  </div>`;
+
+  // Tarjetas de cada auxiliar
+  html += `<div style="margin-bottom:14px">`;
+  r.planRedistribucion.forEach((p, i) => {
+    const aux = auxiliares.find(a => a.nombre === p.nombreAuxiliar);
+    const avatarColor = col(aux ? aux.id : i);
+    const initials = p.nombreAuxiliar.split(' ').map(n => n[0]).slice(0, 2).join('');
+    const tagClass = p.nivelCarga === 'alta' ? 'carga-alta' : p.nivelCarga === 'media' ? 'carga-media' : 'carga-normal';
+    const tagLabel = p.nivelCarga === 'alta' ? '⚠️ Carga alta' : p.nivelCarga === 'media' ? '⚡ Carga media' : '✅ Normal';
+    const vecesExtra = aux ? (cargaExtra[aux.id] || 1) : 1;
+
+    html += `<div class="aux-carga-item" style="animation-delay:${i * 80}ms">
+      <div class="carga-avatar" style="background:${avatarColor}">${initials}</div>
+      <div class="carga-info">
+        <strong>${p.nombreAuxiliar}</strong>
+        <span>${p.moduloOriginal} → ${p.tareaExtra}</span>
+        <span style="display:block;color:var(--text-dim);font-size:11px;margin-top:2px;font-style:italic">${p.justificacion}</span>
+      </div>
+      <div class="carga-extra">
+        <span class="carga-tag ${tagClass}">${tagLabel}</span>
+        <span class="carga-residentes">+${p.residentesExtra} residentes</span>
+        <span class="carga-residentes">${vecesExtra}x extra acumulado</span>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Parte de incidencia
+  html += `<div style="margin-bottom:6px;font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em">Parte de incidencia (listo para copiar)</div>
+  <div class="parte-box">${r.parteIncidencia}
+    <button class="copy-btn" onclick="copyText(this,'${encodeMsg(r.parteIncidencia)}')">📋 Copiar</button>
+  </div>`;
+
+  // Recomendación futura
+  if (r.recomendacionFutura) {
+    html += `<div style="margin-top:12px;background:rgba(107,159,212,0.08);border:1px solid #2E4F7A;border-radius:10px;padding:11px 14px;font-size:12px;color:var(--blue);line-height:1.6">
+      💡 <strong>Para el futuro:</strong> ${r.recomendacionFutura}
+    </div>`;
+  }
+
+  cont.innerHTML = html;
+}
+
+// ============ INIT ============
+renderEquipo();
+
+// Botón "sin cobertura" en las sugerencias de llamada
+function activarSinCobertura() {
+  mostrarPanelRedistribucion();
+}
+</script>
+</body>
+</html>
