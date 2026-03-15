@@ -741,12 +741,12 @@ header {
     <div style="font-size:42px;margin-bottom:16px">🔑</div>
     <h2 style="font-family:'Fraunces',serif;font-size:22px;color:#F0F6FF;margin-bottom:8px">Bienvenida, coordinadora</h2>
     <p style="font-size:13px;color:#7AABCC;line-height:1.6;margin-bottom:24px">Para usar el agente necesitas tu clave de API de Anthropic. Solo te la pediremos <strong style="color:#0099CC">una vez</strong> — quedará guardada en este dispositivo.</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="width:100%;background:#003060;border:1px solid #004080;border-radius:12px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:#F0F6FF;outline:none;margin-bottom:8px;letter-spacing:0.5px">
-    <p style="font-size:11px;color:#3A6688;margin-bottom:20px">La clave empieza por <code style="color:#0099CC">sk-ant-</code> y la encuentras en console.anthropic.com</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." style="width:100%;background:#003060;border:1px solid #004080;border-radius:12px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:#F0F6FF;outline:none;margin-bottom:8px;letter-spacing:0.5px">
+    <p style="font-size:11px;color:#3A6688;margin-bottom:20px">La clave empieza por <code style="color:#0099CC">sk-or-</code> y la encuentras en openrouter.ai/settings/keys</p>
     <button onclick="guardarClave()" style="width:100%;background:linear-gradient(135deg,#0099CC,#003399);border:none;border-radius:12px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:white;cursor:pointer;margin-bottom:10px">
       Guardar y entrar →
     </button>
-    <p id="apiKeyError" style="font-size:12px;color:#E05555;display:none;margin-top:4px">La clave no parece válida. Comprueba que empieza por sk-ant-</p>
+    <p id="apiKeyError" style="font-size:12px;color:#E05555;display:none;margin-top:4px">La clave no parece válida. Comprueba que empieza por sk-or-</p>
   </div>
 </div>
 
@@ -1028,7 +1028,7 @@ function getApiKey(){
 function guardarClave(){
   const input = document.getElementById('apiKeyInput').value.trim();
   const error = document.getElementById('apiKeyError');
-  if(!input.startsWith('sk-ant-')){
+  if(!input.startsWith('sk-or-')){
     error.style.display='block';
     return;
   }
@@ -1482,16 +1482,16 @@ Actúa como agente autónomo. Devuelve SOLO este JSON sin texto extra ni backtic
       document.getElementById('apiKeyModal').style.display='flex';
       throw new Error('No hay clave API configurada.');
     }
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://mczs1920-source.github.io',
+        'X-Title': 'Agente Coordinadora Ilunion'
       },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'anthropic/claude-sonnet-4-5',
         max_tokens:1500,
         messages:[{role:'user',content:prompt}]
       })
@@ -1505,7 +1505,7 @@ Actúa como agente autónomo. Devuelve SOLO este JSON sin texto extra ni backtic
     }
 
     const data = await res.json();
-    const raw = data.content.map(b=>b.text||'').join('');
+    const raw = data.choices[0].message.content;
     const clean = raw.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
 
@@ -1716,14 +1716,16 @@ Devuelve SOLO un JSON con esta estructura exacta, sin backticks:
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://mczs1920-source.github.io',
+        'X-Title': 'Agente Coordinadora Ilunion'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4-5',
         max_tokens: 1500,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -1731,7 +1733,7 @@ Devuelve SOLO un JSON con esta estructura exacta, sin backticks:
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const raw = data.content.map(b => b.text || '').join('');
+    const raw = data.choices[0].message.content;
     const clean = raw.replace(/```json|```/g, '').trim();
     const r = JSON.parse(clean);
 
