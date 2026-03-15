@@ -12,10 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #001830;
-  --bg2: #002448;
-  --bg3: #003060;
-  --border: #004080;
+  --bg: #F7F9FC;
+  --bg2: #FFFFFF;
+  --bg3: #EEF3F8;
+  --border: #D0DDE8;
   --terracota: #0099CC;
   --terracota-glow: rgba(0,153,204,0.15);
   --terracota-dim: #006699;
@@ -26,9 +26,9 @@
   --red: #E05555;
   --red-dim: #6B2020;
   --blue: #66CCFF;
-  --text: #F0F6FF;
-  --text-soft: #7AABCC;
-  --text-dim: #3A6688;
+  --text: #001830;
+  --text-soft: #336688;
+  --text-dim: #7A99BB;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -52,19 +52,11 @@ body::before {
 /* HEADER */
 header {
   position: sticky; top:0; z-index:100;
-  background: rgba(15,13,11,0.92);
+  background: rgba(0,24,48,0.96);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #004080;
   padding: 14px 20px;
   display: flex; align-items: center; gap: 14px;
-}
-.logo {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #0099CC, #003399);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 0 20px var(--terracota-glow);
 }
 .header-text h1 {
   font-family: 'Fraunces', serif;
@@ -741,26 +733,26 @@ header {
     <div style="font-size:42px;margin-bottom:16px">🔑</div>
     <h2 style="font-family:'Fraunces',serif;font-size:22px;color:#F0F6FF;margin-bottom:8px">Bienvenida, coordinadora</h2>
     <p style="font-size:13px;color:#7AABCC;line-height:1.6;margin-bottom:24px">Para usar el agente necesitas tu clave de API de Anthropic. Solo te la pediremos <strong style="color:#0099CC">una vez</strong> — quedará guardada en este dispositivo.</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="width:100%;background:#003060;border:1px solid #004080;border-radius:12px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:#F0F6FF;outline:none;margin-bottom:8px;letter-spacing:0.5px">
-    <p style="font-size:11px;color:#3A6688;margin-bottom:20px">La clave empieza por <code style="color:#0099CC">sk-ant-</code> y la encuentras en console.anthropic.com</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." style="width:100%;background:#EEF3F8;border:1px solid #D0DDE8;border-radius:12px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:#001830;outline:none;margin-bottom:8px;letter-spacing:0.5px">
+    <p style="font-size:11px;color:#3A6688;margin-bottom:20px">La clave empieza por <code style="color:#0099CC">sk-or-</code> y la encuentras en openrouter.ai/settings/keys</p>
     <button onclick="guardarClave()" style="width:100%;background:linear-gradient(135deg,#0099CC,#003399);border:none;border-radius:12px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:white;cursor:pointer;margin-bottom:10px">
       Guardar y entrar →
     </button>
-    <p id="apiKeyError" style="font-size:12px;color:#E05555;display:none;margin-top:4px">La clave no parece válida. Comprueba que empieza por sk-ant-</p>
+    <p id="apiKeyError" style="font-size:12px;color:#E05555;display:none;margin-top:4px">La clave no parece válida. Comprueba que empieza por sk-or-</p>
   </div>
 </div>
 
 <header>
-  <div class="logo">🤖</div>
+  <img src="data:image/png;base64,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y5swjzynl/G6t/VWB2TKSekc459d9vKupERZi1URERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERF//9k=" alt="Ilunion" style="height:38px;object-fit:contain;background:#FFFFFF;border-radius:6px;padding:3px 8px">
   <div class="header-text">
-    <h1>Agente Coordinadora</h1>
-    <p>Ilunion Vida Senior · Parla</p>
+    <h1 style="color:#F0F6FF">Agente Coordinadora</h1>
+    <p style="color:#7AABCC">Ilunion Vida Senior · Parla</p>
   </div>
   <div class="status-dot">
     <div class="dot-alive"></div>
-    Agente activo
+    <span style="color:#7AABCC">Agente activo</span>
   </div>
-  <button onclick="borrarClave()" title="Cambiar clave API" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:4px 8px;margin-left:auto">🔑</button>
+  <button onclick="borrarClave()" title="Cambiar clave API" style="background:none;border:none;color:#7AABCC;font-size:16px;cursor:pointer;padding:4px 8px;margin-left:8px">🔑</button>
 </header>
 
 <div class="app">
@@ -1028,7 +1020,7 @@ function getApiKey(){
 function guardarClave(){
   const input = document.getElementById('apiKeyInput').value.trim();
   const error = document.getElementById('apiKeyError');
-  if(!input.startsWith('sk-ant-')){
+  if(!input.startsWith('sk-or-')){
     error.style.display='block';
     return;
   }
@@ -1482,16 +1474,16 @@ Actúa como agente autónomo. Devuelve SOLO este JSON sin texto extra ni backtic
       document.getElementById('apiKeyModal').style.display='flex';
       throw new Error('No hay clave API configurada.');
     }
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://mczs1920-source.github.io',
+        'X-Title': 'Agente Coordinadora Ilunion'
       },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'anthropic/claude-sonnet-4-5',
         max_tokens:1500,
         messages:[{role:'user',content:prompt}]
       })
@@ -1505,7 +1497,7 @@ Actúa como agente autónomo. Devuelve SOLO este JSON sin texto extra ni backtic
     }
 
     const data = await res.json();
-    const raw = data.content.map(b=>b.text||'').join('');
+    const raw = data.choices[0].message.content;
     const clean = raw.replace(/```json|```/g,'').trim();
     const result = JSON.parse(clean);
 
@@ -1716,14 +1708,16 @@ Devuelve SOLO un JSON con esta estructura exacta, sin backticks:
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://mczs1920-source.github.io',
+        'X-Title': 'Agente Coordinadora Ilunion'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4-5',
         max_tokens: 1500,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -1731,7 +1725,7 @@ Devuelve SOLO un JSON con esta estructura exacta, sin backticks:
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const raw = data.content.map(b => b.text || '').join('');
+    const raw = data.choices[0].message.content;
     const clean = raw.replace(/```json|```/g, '').trim();
     const r = JSON.parse(clean);
 
