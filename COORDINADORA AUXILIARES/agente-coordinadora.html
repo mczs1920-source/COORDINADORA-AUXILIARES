@@ -308,15 +308,9 @@ header { position: sticky; top:0; z-index:100; background: rgba(245,240,250,0.97
             <option value="N">🌙 Noche</option>
           </select>
           <select id="rd-modulo" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
-            <option>Psico</option>
-            <option>Módulo 1</option>
-            <option>Módulo 2</option>
-            <option>Módulo 3</option>
-            <option>Módulo 4</option>
-            <option>Módulo 5</option>
-            <option>Módulo 6</option>
-            <option>Módulo 7</option>
-            <option>Módulo 8</option>
+            <option>Unidad de Memoria</option>
+            <option>Planta Baja</option>
+            <option>Primera Planta</option>
           </select>
         </div>
       </div>
@@ -610,15 +604,9 @@ const colores = ["#C1714F","#7A9E8E","#5B6FA0","#8B6BAE","#C4924A","#4A8FA8","#A
 function col(i){ return colores[i % colores.length]; }
 
 const MODULOS = [
-  {nombre:"Psico",    planta:"psico",    minM:2, minMmax:2, minT:2, minN:1, nocheRol:"exclusiva", residentes:"alto"},
-  {nombre:"Módulo 2", planta:"primera",  minM:2, minMmax:2, minT:2, minN:1, nocheRol:"primera",   residentes:"alto"},
-  {nombre:"Módulo 3", planta:"primera",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"primera",   residentes:"bajo"},
-  {nombre:"Módulo 4", planta:"primera",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"primera",   residentes:"bajo"},
-  {nombre:"Módulo 5", planta:"primera",  minM:3, minMmax:4, minT:2, minN:1, nocheRol:"apoyo",     residentes:"alto"},
-  {nombre:"Módulo 6", planta:"segunda",  minM:2, minMmax:2, minT:2, minN:1, nocheRol:"segunda",   residentes:"alto"},
-  {nombre:"Módulo 7", planta:"segunda",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"segunda",   residentes:"bajo"},
-  {nombre:"Módulo 8", planta:"segunda",  minM:1, minMmax:1, minT:1, minN:1, nocheRol:"segunda",   residentes:"bajo"},
-  {nombre:"Módulo 9", planta:"segunda",  minM:2, minMmax:3, minT:2, minN:1, nocheRol:"segunda",   residentes:"alto"},
+  {nombre:"Unidad de Memoria", planta:"memoria", minM:2, minMmax:2, minT:2, minN:1, nocheRol:"memoria",  residentes:"alto"},
+  {nombre:"Planta Baja",       planta:"baja",    minM:3, minMmax:4, minT:2, minN:1, nocheRol:"baja",     residentes:"alto"},
+  {nombre:"Primera Planta",    planta:"primera", minM:3, minMmax:3, minT:2, minN:1, nocheRol:"primera",  residentes:"alto"},
 ];
 
 function getMinimoModulo(nombreModulo, turno){
@@ -633,14 +621,14 @@ function getMinimoModulo(nombreModulo, turno){
 function alertaModulo(nombreModulo, turno, presentes, minimo){
   if(presentes >= minimo) return null;
   const faltantes = minimo - presentes;
-  const esPsicoTarde = nombreModulo === 'Psico' && turno === 'T';
-  const esPsico = nombreModulo === 'Psico';
+  const esMemoriaTarde = nombreModulo === 'Unidad de Memoria' && turno === 'T';
+  const esMemoria = nombreModulo === 'Unidad de Memoria';
   let nivel, mensaje;
-  if(esPsicoTarde && presentes < 2){
-    nivel = '🔴 CRÍTICO';
-    mensaje = '⚠️ REGLA DE ORO: Psico tarde nunca puede quedarse con menos de 2. Una sola auxiliar tendría que acostar a 16 residentes de psicogeriatría. Buscar cobertura externa urgente.';
-  } else if(esPsico || faltantes > 1){
-    nivel = '🔴 CRÍTICO';
+  if(esMemoriaTarde && presentes < 2){
+    nivel = '🔴 CRITICO';
+    mensaje = '⚠️ REGLA DE ORO: Unidad de Memoria tarde nunca puede quedarse con menos de 2. Una sola auxiliar tendria que acostar a todos los residentes con demencia. Buscar cobertura externa urgente.';
+  } else if(esMemoria || faltantes > 1){
+    nivel = '🔴 CRITICO';
     mensaje = null;
   } else {
     nivel = '🟠 ALERTA';
@@ -650,42 +638,29 @@ function alertaModulo(nombreModulo, turno, presentes, minimo){
 }
 
 let auxiliares = [
-  {id:1, nombre:"María García",     turno:"M", modulo:"Psico",    tel:""},
-  {id:2, nombre:"Ana Martínez",     turno:"M", modulo:"Psico",    tel:""},
-  {id:3, nombre:"Laura Sánchez",    turno:"M", modulo:"Módulo 2", tel:""},
-  {id:4, nombre:"Carmen López",     turno:"M", modulo:"Módulo 2", tel:""},
-  {id:5, nombre:"Isabel Fernández", turno:"M", modulo:"Módulo 3", tel:""},
-  {id:6, nombre:"Rosa Jiménez",     turno:"M", modulo:"Módulo 4", tel:""},
-  {id:7, nombre:"Pilar Ruiz",       turno:"M", modulo:"Módulo 5", tel:""},
-  {id:8, nombre:"Lucía Hernández",  turno:"M", modulo:"Módulo 5", tel:""},
-  {id:9, nombre:"Marta Díaz",       turno:"M", modulo:"Módulo 5", tel:""},
-  {id:10,nombre:"Elena Moreno",     turno:"M", modulo:"Módulo 6", tel:""},
-  {id:11,nombre:"Sara Torres",      turno:"M", modulo:"Módulo 6", tel:""},
-  {id:12,nombre:"Nuria Ramírez",    turno:"M", modulo:"Módulo 7", tel:""},
-  {id:13,nombre:"Patricia Castro",  turno:"M", modulo:"Módulo 8", tel:""},
-  {id:14,nombre:"Cristina Ortega",  turno:"M", modulo:"Módulo 9", tel:""},
-  {id:15,nombre:"Vanesa Rubio",     turno:"M", modulo:"Módulo 9", tel:""},
-  {id:16,nombre:"Beatriz Navarro",  turno:"T", modulo:"Psico",    tel:""},
-  {id:17,nombre:"Silvia Morales",   turno:"T", modulo:"Psico",    tel:""},
-  {id:18,nombre:"Raquel Domínguez", turno:"T", modulo:"Módulo 2", tel:""},
-  {id:19,nombre:"Alicia Vargas",    turno:"T", modulo:"Módulo 2", tel:""},
-  {id:20,nombre:"Mónica Iglesias",  turno:"T", modulo:"Módulo 3", tel:""},
-  {id:21,nombre:"Yolanda Serrano",  turno:"T", modulo:"Módulo 4", tel:""},
-  {id:22,nombre:"Amparo Blanco",    turno:"T", modulo:"Módulo 5", tel:""},
-  {id:23,nombre:"Consuelo Cano",    turno:"T", modulo:"Módulo 5", tel:""},
-  {id:24,nombre:"Dolores Prieto",   turno:"T", modulo:"Módulo 6", tel:""},
-  {id:25,nombre:"Encarna Méndez",   turno:"T", modulo:"Módulo 6", tel:""},
-  {id:26,nombre:"Fátima Herrera",   turno:"T", modulo:"Módulo 7", tel:""},
-  {id:27,nombre:"Ginés Molina",     turno:"T", modulo:"Módulo 8", tel:""},
-  {id:28,nombre:"Helena Reyes",     turno:"T", modulo:"Módulo 9", tel:""},
-  {id:29,nombre:"Natalia Pérez",    turno:"N", modulo:"Psico",                           nocheRol:"exclusiva-psico", tel:""},
-  {id:30,nombre:"Olga Fuentes",     turno:"N", modulo:"Primera planta (Mód 2-5)",        nocheRol:"primera",         tel:""},
-  {id:31,nombre:"Paula Serrano",    turno:"N", modulo:"Apoyo primera+segunda (Mód 2-9)", nocheRol:"apoyo",           tel:""},
-  {id:32,nombre:"Queralt Vidal",    turno:"N", modulo:"Segunda planta (Mód 6-9)",        nocheRol:"segunda",         tel:""},
+  // ===== MANANA =====
+  {id:1,  nombre:"Carmen Rodriguez",  turno:"M", modulo:"Unidad de Memoria", tel:""},
+  {id:2,  nombre:"Ana Garcia",        turno:"M", modulo:"Unidad de Memoria", tel:""},
+  {id:3,  nombre:"Maria Lopez",       turno:"M", modulo:"Planta Baja",       tel:""},
+  {id:4,  nombre:"Isabel Martinez",   turno:"M", modulo:"Planta Baja",       tel:""},
+  {id:5,  nombre:"Lucia Fernandez",   turno:"M", modulo:"Planta Baja",       tel:""},
+  {id:6,  nombre:"Rosa Sanchez",      turno:"M", modulo:"Primera Planta",    tel:""},
+  {id:7,  nombre:"Pilar Jimenez",     turno:"M", modulo:"Primera Planta",    tel:""},
+  {id:8,  nombre:"Elena Moreno",      turno:"M", modulo:"Primera Planta",    tel:""},
+  // ===== TARDE =====
+  {id:9,  nombre:"Laura Torres",      turno:"T", modulo:"Unidad de Memoria", tel:""},
+  {id:10, nombre:"Marta Ruiz",        turno:"T", modulo:"Unidad de Memoria", tel:""},
+  {id:11, nombre:"Sara Diaz",         turno:"T", modulo:"Planta Baja",       tel:""},
+  {id:12, nombre:"Patricia Gomez",    turno:"T", modulo:"Planta Baja",       tel:""},
+  {id:13, nombre:"Nuria Alvarez",     turno:"T", modulo:"Primera Planta",    tel:""},
+  {id:14, nombre:"Beatriz Romero",    turno:"T", modulo:"Primera Planta",    tel:""},
+  // ===== NOCHE =====
+  {id:15, nombre:"Silvia Navarro",    turno:"N", modulo:"Planta Baja + Primera Planta", nocheRol:"plantas",  tel:""},
+  {id:16, nombre:"Monica Serrano",    turno:"N", modulo:"Unidad de Memoria",            nocheRol:"memoria",  tel:""},
 ];
 
 let ausencias = [];
-let nextId = 33;
+let nextId = 17;
 const hoy = new Date().toISOString().slice(0,10);
 document.getElementById('qa-fecha').value = hoy;
 
@@ -881,7 +856,7 @@ async function runAgent(){
   const nocheAusentes = nocheAux.filter(a => ausentesHoyIds.includes(a.id));
   const nocheStr = nocheAusentes.length > 0
     ? `⚠️ NOCHE: falta ${nocheAusentes.map(a=>`${a.nombre} (${a.nocheRol||a.modulo})`).join(', ')}`
-    : `✅ NOCHE: cobertura completa (4 auxiliares)`;
+    : `✅ NOCHE: cobertura completa (2 auxiliares)`;
 
   const historial = auxiliares.map(a=>{
     const n = ausencias.filter(x=>x.auxId===a.id).length;
@@ -913,16 +888,12 @@ async function runAgent(){
 
   const prompt = `Eres un agente autónomo de coordinación de auxiliares en una residencia geriátrica.
 
-ESTRUCTURA DEL CENTRO:
-- Psico (planta especial): SIEMPRE mínimo 2 auxiliares en Mañana y Tarde, 1 EXCLUSIVA en Noche
-- ⚠️ REGLA DE ORO — PSICO TARDE: NUNCA sugerir sacar a nadie de Psico para cubrir otro módulo en tarde. Situación CRÍTICA si solo queda 1 auxiliar. Buscar cobertura externa siempre.
-- ⚠️ REGLA DE ORO — PSICO MAÑANA: Igual, mínimo 2 siempre.
-- Módulo 5 (mañana): mínimo 3, puede llegar a 4
-- Módulo 9 (mañana): mínimo 2, puede llegar a 3
-- Módulos 2, 6 (mañana): mínimo 2
-- Módulos 3, 4, 7, 8 (mañana): mínimo 1
-- Tarde: Psico mín 2 INAMOVIBLE, módulos grandes (2,5,6,9) mín 2, módulos pequeños (3,4,7,8) mín 1
-- Noche: 4 auxiliares fijas → 1 exclusiva Psico | 1 primera planta (Mód 2-5) | 1 apoyo primera+segunda | 1 segunda planta (Mód 6-9)
+ESTRUCTURA DEL CENTRO (50 residentes):
+- Unidad de Memoria: SIEMPRE minimo 2 auxiliares en Manana y Tarde, 1 exclusiva en Noche
+- REGLA DE ORO: Unidad de Memoria nunca puede quedarse con menos de 2 en ningun turno diurno. Residentes con demencia requieren atencion especializada constante.
+- Planta Baja (Grado I y II): minimo 3 en Manana, minimo 2 en Tarde
+- Primera Planta (Grado III): minimo 3 en Manana, minimo 2 en Tarde
+- Noche: 2 auxiliares fijas → 1 en Unidad de Memoria | 1 en Planta Baja + Primera Planta
 
 SITUACIÓN DESCRITA:
 ${situacion || "(Sin descripción adicional, analiza solo con datos del cuadrante)"}
