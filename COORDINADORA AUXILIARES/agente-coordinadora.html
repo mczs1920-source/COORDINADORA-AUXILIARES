@@ -639,7 +639,7 @@ function alertaModulo(nombreModulo, turno, presentes, minimo){
 
 let auxiliares = [
   // ===== MANANA =====
-  {id:1,  nombre:"Carmen Rodriguez",  turno:"M", modulo:"Unidad de Memoria", tel:""},
+  {id:1,  nombre:"Mari Carmen Zamora", turno:"M", modulo:"Unidad de Memoria", tel:"605519500"},
   {id:2,  nombre:"Ana Garcia",        turno:"M", modulo:"Unidad de Memoria", tel:""},
   {id:3,  nombre:"Maria Lopez",       turno:"M", modulo:"Planta Baja",       tel:""},
   {id:4,  nombre:"Isabel Martinez",   turno:"M", modulo:"Planta Baja",       tel:""},
@@ -978,12 +978,56 @@ function renderResults(r){
     area.appendChild(makeCard('rc-red','🏠','Módulos detectados',bodyHtml,delay)); delay+=100;
   }
   if(r.sugerenciasLlamada && r.sugerenciasLlamada.length>0){
-    let bodyHtml = r.sugerenciasLlamada.slice(0,5).map((s,i)=>`
-      <div class="llamada-item">
-        <div class="llamada-avatar" style="background:${col(i)}">${s.nombre.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
-        <div class="llamada-info"><strong>${s.nombre}</strong><span>Turno ${s.turno==='M'?'Mañana':s.turno==='T'?'Tarde':'Noche'} · ${s.modulo}</span><span style="display:block;color:var(--text-dim);font-size:11px">${s.razon}</span></div>
-        <span class="llamada-razon">Prioridad ${s.prioridad}</span>
-      </div>`).join('');
+    // Enriquecer sugerencias con auxiliares reales ordenadas por horas
+    const ausentesHoyIds2 = getAusentesHoy();
+    // Para cada hueco detectado, buscar suplentes reales
+    const huecosTurnos = [...new Set(r.sugerenciasLlamada.map(s => s.turno))];
+    let suplentesReales = [];
+    huecosTurnos.forEach(turnoHueco => {
+      // Turno contrario al que falta
+      let turnosALlamar = [];
+      if(turnoHueco === 'M') turnosALlamar = ['T','N'];
+      else if(turnoHueco === 'T') turnosALlamar = ['M','N'];
+      else turnosALlamar = ['M','T'];
+      // Auxiliares disponibles (no ausentes hoy) de esos turnos
+      const candidatas = auxiliares
+        .filter(a => turnosALlamar.includes(a.turno) && !ausentesHoyIds2.includes(a.id))
+        .sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id));
+      candidatas.forEach(a => {
+        if(!suplentesReales.find(x => x.id === a.id)){
+          suplentesReales.push({...a, saldo: getSaldoHoras(a.id), turnoHueco});
+        }
+      });
+    });
+
+    let bodyHtml = '';
+    if(suplentesReales.length > 0){
+      bodyHtml += '<div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;line-height:1.6">Ordenadas por <strong style="color:var(--text)">menor horas acumuladas</strong> — llama primero a la que menos debe:</div>';
+      bodyHtml += suplentesReales.slice(0,6).map((a,i) => {
+        const turnoNom = a.turno==='M'?'Mañana':a.turno==='T'?'Tarde':'Noche';
+        const initials = a.nombre.split(' ').map(n=>n[0]).slice(0,2).join('');
+        const saldoStr = a.saldo === 0 ? '0h acumuladas' : a.saldo + 'h acumuladas';
+        const colorSaldo = a.saldo === 0 ? 'var(--sage)' : a.saldo > 4 ? 'var(--red)' : 'var(--amber)';
+        return `<div class="llamada-item">
+          <div style="width:28px;height:28px;border-radius:50%;background:${col(a.id)};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0">${i+1}</div>
+          <div class="llamada-avatar" style="background:${col(a.id)}">${initials}</div>
+          <div class="llamada-info">
+            <strong>${a.nombre}</strong>
+            <span>Turno habitual: ${turnoNom} · ${a.modulo}</span>
+            <span style="display:block;color:var(--text-dim);font-size:11px">${a.tel ? '📞 ' + a.tel : 'Sin teléfono registrado'}</span>
+          </div>
+          <span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(167,109,200,0.1);color:${colorSaldo};border:1px solid var(--border);white-space:nowrap">${saldoStr}</span>
+        </div>`;
+      }).join('');
+    } else {
+      // Fallback si no hay suplentes
+      bodyHtml = r.sugerenciasLlamada.slice(0,5).map((s,i)=>`
+        <div class="llamada-item">
+          <div class="llamada-avatar" style="background:${col(i)}">${s.nombre.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+          <div class="llamada-info"><strong>${s.nombre}</strong><span>Turno ${s.turno==='M'?'Mañana':s.turno==='T'?'Tarde':'Noche'} · ${s.modulo}</span><span style="display:block;color:var(--text-dim);font-size:11px">${s.razon}</span></div>
+          <span class="llamada-razon">Prioridad ${s.prioridad}</span>
+        </div>`).join('');
+    }
     area.appendChild(makeCard('rc-sage','📞','A quién llamar primero',bodyHtml,delay));
     const btnCard = document.createElement('div');
     btnCard.style.cssText = 'animation:cardIn 0.5s ease forwards;opacity:0;animation-delay:'+(delay+50)+'ms';
