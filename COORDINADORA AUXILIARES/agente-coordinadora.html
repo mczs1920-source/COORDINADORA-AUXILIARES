@@ -462,6 +462,97 @@ header { position: sticky; top:0; z-index:100; background: rgba(245,240,250,0.97
     <div id="informeResultado" style="margin-top:12px"></div>
   </div>
 
+
+  <!-- CONTROL DE HORAS -->
+  <div class="ausencia-quick" id="secHoras">
+    <h3><span>⏱️ Control de horas extra y regulación</span></h3>
+    <p style="font-size:12px;color:var(--text-soft);margin-bottom:14px;line-height:1.6">Registra las horas que se deben a cada auxiliar por coberturas extra, y las regulaciones cuando las disfrutan.</p>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="tab-extra" onclick="switchTab('extra')" style="flex:1;padding:8px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--terracota);background:var(--terracota);color:white;transition:all 0.2s">
+        ➕ Registrar horas extra
+      </button>
+      <button id="tab-reg" onclick="switchTab('reg')" style="flex:1;padding:8px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text-soft);transition:all 0.2s">
+        ➖ Registrar regulación
+      </button>
+    </div>
+
+    <!-- Formulario extra -->
+    <div id="form-extra">
+      <div class="quick-form" style="margin-bottom:8px">
+        <select id="he-aux" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+          <option value="">Auxiliar...</option>
+        </select>
+        <input type="date" id="he-fecha" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+      <div class="quick-form" style="margin-bottom:8px">
+        <div>
+          <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Horas trabajadas</label>
+          <select id="he-horas" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+            <option value="1">1 hora</option>
+            <option value="2">2 horas</option>
+            <option value="3">3 horas</option>
+            <option value="4">4 horas</option>
+            <option value="5">5 horas</option>
+            <option value="6">6 horas</option>
+            <option value="7" selected>7 horas (turno completo)</option>
+            <option value="8">8 horas</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Motivo</label>
+          <select id="he-motivo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+            <option value="Cobertura turno completo">Turno completo</option>
+            <option value="Cobertura parcial - duchas">Duchas</option>
+            <option value="Cobertura parcial - acostadas">Acostadas</option>
+            <option value="Cobertura parcial - comidas">Comidas</option>
+            <option value="Refuerzo puntual">Refuerzo puntual</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-ausencia" onclick="registrarHorasExtra()" style="background:rgba(139,91,181,0.12);border-color:var(--terracota-dim);color:var(--terracota)">
+        ➕ Registrar horas extra
+      </button>
+    </div>
+
+    <!-- Formulario regulacion -->
+    <div id="form-reg" style="display:none">
+      <div class="quick-form" style="margin-bottom:8px">
+        <select id="hr-aux" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+          <option value="">Auxiliar...</option>
+        </select>
+        <input type="date" id="hr-fecha" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:10px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:4px">Horas de regulacion a descontar</label>
+        <select id="hr-horas" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
+          <option value="1">1 hora</option>
+          <option value="2">2 horas</option>
+          <option value="3">3 horas</option>
+          <option value="4">4 horas</option>
+          <option value="5">5 horas</option>
+          <option value="6">6 horas</option>
+          <option value="7" selected>7 horas (dia completo)</option>
+          <option value="8">8 horas</option>
+        </select>
+      </div>
+      <button class="btn-ausencia" onclick="registrarRegulacion()" style="background:rgba(192,84,122,0.12);border-color:var(--red-dim);color:var(--red)">
+        ➖ Registrar regulacion
+      </button>
+    </div>
+
+    <!-- Saldo actual -->
+    <div style="margin-top:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <span>Saldo de horas por auxiliar</span>
+        <span id="badge-horas" style="font-size:11px;color:var(--terracota);font-weight:400"></span>
+      </div>
+      <div id="saldo-horas"></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -1224,8 +1315,163 @@ function renderInforme(r, semana){
   cont.innerHTML = html;
 }
 
+
+// ============ CONTROL DE HORAS ============
+let horasExtra = []; // {auxId, fecha, horas, motivo}
+let horasRegulacion = []; // {auxId, fecha, horas}
+
+function getSaldoHoras(auxId){
+  const extra = horasExtra.filter(h => h.auxId === auxId).reduce((s, h) => s + h.horas, 0);
+  const reg = horasRegulacion.filter(h => h.auxId === auxId).reduce((s, h) => s + h.horas, 0);
+  return extra - reg;
+}
+
+function switchTab(tab){
+  const btnExtra = document.getElementById('tab-extra');
+  const btnReg = document.getElementById('tab-reg');
+  const formExtra = document.getElementById('form-extra');
+  const formReg = document.getElementById('form-reg');
+  if(tab === 'extra'){
+    btnExtra.style.background = 'var(--terracota)'; btnExtra.style.color = 'white'; btnExtra.style.borderColor = 'var(--terracota)';
+    btnReg.style.background = 'var(--bg3)'; btnReg.style.color = 'var(--text-soft)'; btnReg.style.borderColor = 'var(--border)';
+    formExtra.style.display = 'block'; formReg.style.display = 'none';
+  } else {
+    btnReg.style.background = 'var(--terracota)'; btnReg.style.color = 'white'; btnReg.style.borderColor = 'var(--terracota)';
+    btnExtra.style.background = 'var(--bg3)'; btnExtra.style.color = 'var(--text-soft)'; btnExtra.style.borderColor = 'var(--border)';
+    formReg.style.display = 'block'; formExtra.style.display = 'none';
+  }
+}
+
+function updateHorasSelects(){
+  ['he-aux','hr-aux'].forEach(function(id){
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const val = sel.value;
+    sel.innerHTML = '<option value="">Auxiliar...</option>';
+    auxiliares.forEach(function(a){
+      sel.innerHTML += '<option value="' + a.id + '">' + a.nombre + ' (' + a.turno + ')</option>';
+    });
+    sel.value = val;
+  });
+}
+
+function registrarHorasExtra(){
+  const auxId = parseInt(document.getElementById('he-aux').value);
+  const fecha = document.getElementById('he-fecha').value;
+  const horas = parseInt(document.getElementById('he-horas').value);
+  const motivo = document.getElementById('he-motivo').value;
+  if(!auxId || !fecha){ alert('Selecciona auxiliar y fecha.'); return; }
+  horasExtra.push({auxId, fecha, horas, motivo});
+  renderSaldoHoras();
+  document.getElementById('he-aux').value = '';
+  document.getElementById('he-fecha').value = hoy;
+}
+
+function registrarRegulacion(){
+  const auxId = parseInt(document.getElementById('hr-aux').value);
+  const fecha = document.getElementById('hr-fecha').value;
+  const horas = parseInt(document.getElementById('hr-horas').value);
+  if(!auxId || !fecha){ alert('Selecciona auxiliar y fecha.'); return; }
+  const saldo = getSaldoHoras(auxId);
+  if(horas > saldo){
+    const aux = auxiliares.find(a => a.id === auxId);
+    alert((aux ? aux.nombre : 'Esta auxiliar') + ' solo tiene ' + saldo + ' hora' + (saldo !== 1 ? 's' : '') + ' acumulada' + (saldo !== 1 ? 's' : '') + '. No puedes descontar ' + horas + '.');
+    return;
+  }
+  horasRegulacion.push({auxId, fecha, horas});
+  renderSaldoHoras();
+  document.getElementById('hr-aux').value = '';
+  document.getElementById('hr-fecha').value = hoy;
+}
+
+function renderSaldoHoras(){
+  const cont = document.getElementById('saldo-horas');
+  const badge = document.getElementById('badge-horas');
+  if(!cont) return;
+
+  // Solo mostrar auxiliares con movimientos o saldo > 0
+  const auxConMovimientos = auxiliares.filter(a =>
+    horasExtra.some(h => h.auxId === a.id) || horasRegulacion.some(h => h.auxId === a.id)
+  );
+
+  const totalDeuda = auxiliares.reduce((s, a) => s + Math.max(0, getSaldoHoras(a.id)), 0);
+  badge.textContent = totalDeuda > 0 ? totalDeuda + 'h pendientes de devolver' : '';
+
+  if(auxConMovimientos.length === 0){
+    cont.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px">Sin registros de horas todavia</div>';
+    return;
+  }
+
+  // Ordenar por saldo descendente (mas horas debidas primero)
+  const sorted = [...auxConMovimientos].sort((a, b) => getSaldoHoras(b.id) - getSaldoHoras(a.id));
+
+  cont.innerHTML = sorted.map(function(a, i){
+    const saldo = getSaldoHoras(a.id);
+    const extra = horasExtra.filter(h => h.auxId === a.id).reduce((s, h) => s + h.horas, 0);
+    const reg = horasRegulacion.filter(h => h.auxId === a.id).reduce((s, h) => s + h.horas, 0);
+    const color = saldo > 6 ? 'var(--red)' : saldo > 2 ? 'var(--amber)' : 'var(--sage)';
+    const bg = saldo > 6 ? 'rgba(192,84,122,0.08)' : saldo > 2 ? 'rgba(196,127,216,0.08)' : 'rgba(167,109,200,0.08)';
+    const border = saldo > 6 ? 'var(--red-dim)' : saldo > 2 ? 'var(--amber-dim)' : 'var(--sage-dim)';
+    const initials = a.nombre.split(' ').map(function(n){return n[0];}).slice(0,2).join('');
+
+    // Historial de esta auxiliar
+    const movimientos = [
+      ...horasExtra.filter(h => h.auxId === a.id).map(h => ({tipo:'extra', fecha:h.fecha, horas:h.horas, motivo:h.motivo})),
+      ...horasRegulacion.filter(h => h.auxId === a.id).map(h => ({tipo:'reg', fecha:h.fecha, horas:h.horas}))
+    ].sort((x,y) => x.fecha.localeCompare(y.fecha));
+
+    return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:12px;padding:11px 14px;margin-bottom:8px;animation:cardIn 0.3s ease forwards">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (movimientos.length > 0 ? '8px' : '0') + '">' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:' + col(a.id) + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">' + initials + '</div>' +
+        '<div style="flex:1"><strong style="font-size:13px;color:var(--text);display:block">' + a.nombre + '</strong>' +
+        '<span style="font-size:11px;color:var(--text-soft)">+' + extra + 'h trabajadas · -' + reg + 'h reguladas</span></div>' +
+        '<div style="text-align:right"><span style="font-size:20px;font-weight:700;font-family:Fraunces,serif;color:' + color + '">' + saldo + 'h</span><br><span style="font-size:10px;color:var(--text-dim)">a devolver</span></div>' +
+      '</div>' +
+      (movimientos.length > 0 ? '<div style="display:flex;flex-wrap:wrap;gap:4px">' +
+        movimientos.map(function(m){
+          return '<span style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;background:' + (m.tipo==='extra' ? 'rgba(139,91,181,0.12)' : 'rgba(192,84,122,0.1)') + ';color:' + (m.tipo==='extra' ? 'var(--terracota)' : 'var(--red)') + '">' +
+            (m.tipo==='extra' ? '+' : '-') + m.horas + 'h · ' + formatFechaCorta(m.fecha) + (m.motivo ? ' · ' + m.motivo.split(' ')[0] : '') +
+          '</span>';
+        }).join('') +
+      '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  // Orden de llamada sugerido (solo las que tienen saldo = 0, para llamar primero)
+  const disponibles = auxiliares.filter(a => getSaldoHoras(a.id) === 0)
+    .concat(auxiliares.filter(a => getSaldoHoras(a.id) > 0).sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id)));
+
+  if(auxConMovimientos.length > 0){
+    cont.innerHTML += '<div style="margin-top:12px;background:rgba(139,91,181,0.06);border:1px solid var(--border);border-radius:12px;padding:11px 14px">' +
+      '<div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Orden de llamada sugerido (proxima urgencia)</div>' +
+      '<div style="font-size:12px;color:var(--text-soft);line-height:1.9">' +
+      auxiliares.filter(a => horasExtra.some(h => h.auxId === a.id) || horasRegulacion.some(h => h.auxId === a.id))
+        .sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id))
+        .map(function(a, i){
+          const saldo = getSaldoHoras(a.id);
+          return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px;margin-bottom:4px">' +
+            '<strong style="color:var(--terracota)">' + (i+1) + '.</strong> ' + a.nombre.split(' ')[0] +
+            ' <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:rgba(139,91,181,0.1);color:var(--terracota)">' + saldo + 'h</span>' +
+          '</span>';
+        }).join('') +
+      '</div></div>';
+  }
+}
+
+// Inicializar fechas de horas
+document.addEventListener('DOMContentLoaded', function(){
+  const heF = document.getElementById('he-fecha');
+  const hrF = document.getElementById('hr-fecha');
+  if(heF) heF.value = hoy;
+  if(hrF) hrF.value = hoy;
+  updateHorasSelects();
+  renderSaldoHoras();
+});
+
 // ============ INIT ============
 renderEquipo();
+updateHorasSelects();
+renderSaldoHoras();
 function activarSinCobertura() { mostrarPanelRedistribucion(); }
 </script>
 </body>
