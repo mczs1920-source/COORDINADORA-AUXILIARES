@@ -1,11 +1,11 @@
 {
-  "name": "Agente Coordinadora · Ilunion Vida Senior",
-  "short_name": "Agente IVS",
+  "name": "Cuida IA · Agente Coordinadora",
+  "short_name": "Cuida IA",
   "description": "Agente autónomo de coordinación de auxiliares geriátricas",
-  "start_url": "/",
+  "start_url": "agente-coordinadora.html",
   "display": "standalone",
-  "background_color": "#0F0D0B",
-  "theme_color": "#D4845A",
+  "background_color": "#F5F0FA",
+  "theme_color": "#9B59B6",
   "orientation": "portrait",
   "icons": [
     {
