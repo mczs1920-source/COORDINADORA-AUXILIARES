@@ -1439,6 +1439,106 @@ document.addEventListener('DOMContentLoaded', function(){
   renderSaldoHoras();
 });
 
+
+// ============ INCIDENCIAS ============
+let incidencias = [];
+
+async function registrarIncidencia(){
+  const fecha = document.getElementById('inc-fecha').value;
+  const turno = document.getElementById('inc-turno').value;
+  const residente = document.getElementById('inc-residente').value.trim();
+  const tipo = document.getElementById('inc-tipo').value;
+  const descripcion = document.getElementById('inc-descripcion').value.trim();
+  if(!fecha || !tipo || !descripcion){ alert('Rellena fecha, tipo y descripcion.'); return; }
+
+  const btn = document.querySelector('[onclick="registrarIncidencia()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(139,107,174,0.3);border-top-color:#B48ED4;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px"></span> Generando parte...';
+
+  const turnoNom = turno === 'M' ? 'Manana' : turno === 'T' ? 'Tarde' : 'Noche';
+  const prompt = 'Eres un agente de coordinacion geriatrica. Genera un parte de incidencia formal y profesional.\n\nDATOS:\nFecha: ' + fecha + '\nTurno: ' + turnoNom + '\nLugar/Residente: ' + (residente || 'No especificado') + '\nTipo: ' + tipo + '\nDescripcion: ' + descripcion + '\n\nDevuelve SOLO este JSON sin backticks:\n{\n  "parteFormato": "string (parte formal completo listo para imprimir o archivar)",\n  "accionesInmediatas": ["string"],\n  "notificarA": ["string (a quien hay que avisar: enfermeria, familia, medico, etc.)"],\n  "seguimientoRecomendado": "string",\n  "nivelGravedad": "leve"|"moderado"|"grave"\n}';
+
+  try {
+    const apiKey = getApiKey();
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey, 'HTTP-Referer': 'https://mczs1920-source.github.io', 'X-Title': 'Cuida IA - Agente Coordinadora' },
+      body: JSON.stringify({ model: 'anthropic/claude-sonnet-4-5', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const raw = data.choices[0].message.content;
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const r = JSON.parse(clean);
+
+    const inc = { id: Date.now(), fecha, turno, residente, tipo, descripcion, parte: r };
+    incidencias.unshift(inc);
+    renderIncidencias();
+
+    // Limpiar formulario
+    document.getElementById('inc-residente').value = '';
+    document.getElementById('inc-tipo').value = '';
+    document.getElementById('inc-descripcion').value = '';
+
+  } catch(e) {
+    alert('Error al generar el parte: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📝 Registrar y generar parte con IA';
+}
+
+function renderIncidencias(){
+  const cont = document.getElementById('listaIncidencias');
+  if(incidencias.length === 0){ cont.innerHTML = ''; return; }
+
+  const colGravedad = { leve: 'var(--sage)', moderado: 'var(--amber)', grave: 'var(--red)' };
+  const bgGravedad = { leve: 'rgba(167,109,200,0.08)', moderado: 'rgba(196,127,216,0.12)', grave: 'rgba(192,84,122,0.1)' };
+  const borderGravedad = { leve: 'var(--sage-dim)', moderado: 'var(--amber-dim)', grave: 'var(--red-dim)' };
+  const iconGravedad = { leve: '🟡', moderado: '🟠', grave: '🔴' };
+  const turnoNom = { M: 'Manana', T: 'Tarde', N: 'Noche' };
+
+  cont.innerHTML = incidencias.map(function(inc){
+    const r = inc.parte;
+    const gravedad = r.nivelGravedad || 'leve';
+    return '<div style="background:' + (bgGravedad[gravedad]||'rgba(167,109,200,0.08)') + ';border:1px solid ' + (borderGravedad[gravedad]||'var(--border)') + ';border-radius:12px;padding:12px 14px;margin-bottom:10px;animation:cardIn 0.3s ease forwards">' +
+
+      // Cabecera
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
+        '<span style="font-size:16px">' + (iconGravedad[gravedad]||'🟡') + '</span>' +
+        '<div style="flex:1">' +
+          '<strong style="font-size:13px;color:var(--text);display:block">' + inc.tipo + (inc.residente ? ' · ' + inc.residente : '') + '</strong>' +
+          '<span style="font-size:11px;color:var(--text-soft)">' + formatFechaCorta(inc.fecha) + ' · Turno ' + (turnoNom[inc.turno]||inc.turno) + '</span>' +
+        '</div>' +
+        '<span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:' + (bgGravedad[gravedad]||'rgba(167,109,200,0.1)') + ';color:' + (colGravedad[gravedad]||'var(--sage)') + ';border:1px solid ' + (borderGravedad[gravedad]||'var(--border)') + '">' + gravedad.toUpperCase() + '</span>' +
+      '</div>' +
+
+      // Acciones inmediatas
+      (r.accionesInmediatas && r.accionesInmediatas.length > 0 ?
+        '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Acciones inmediatas</div>' +
+        r.accionesInmediatas.map(function(a){ return '<div style="font-size:11px;color:var(--text-soft);padding:2px 0">▸ ' + a + '</div>'; }).join('') +
+        '</div>' : '') +
+
+      // Notificar a
+      (r.notificarA && r.notificarA.length > 0 ?
+        '<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px">' +
+        r.notificarA.map(function(n){ return '<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(139,91,181,0.1);color:var(--terracota);font-weight:600">📢 ' + n + '</span>'; }).join('') +
+        '</div>' : '') +
+
+      // Parte formal con boton copiar
+      '<div style="font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Parte formal</div>' +
+      '<div class="parte-box" style="font-size:11px;line-height:1.8">' + r.parteFormato +
+        '<button class="copy-btn" onclick="copyText(this,'' + encodeMsg(r.parteFormato) + '')">📋 Copiar</button>' +
+      '</div>' +
+
+      // Seguimiento
+      (r.seguimientoRecomendado ?
+        '<div style="margin-top:8px;font-size:11px;color:var(--text-soft);line-height:1.6;padding:6px 10px;background:rgba(139,91,181,0.05);border-radius:8px">💡 ' + r.seguimientoRecomendado + '</div>' : '') +
+
+    '</div>';
+  }).join('');
+}
+
 // ============ INIT ============
 renderEquipo();
 updateHorasSelects();
