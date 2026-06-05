@@ -1404,73 +1404,97 @@ function renderSaldoHoras(){
   const badge = document.getElementById('badge-horas');
   if(!cont) return;
 
-  // Solo mostrar auxiliares con movimientos o saldo > 0
-  const auxConMovimientos = auxiliares.filter(a =>
-    horasExtra.some(h => h.auxId === a.id) || horasRegulacion.some(h => h.auxId === a.id)
-  );
-
   const totalDeuda = auxiliares.reduce((s, a) => s + Math.max(0, getSaldoHoras(a.id)), 0);
-  badge.textContent = totalDeuda > 0 ? totalDeuda + 'h pendientes de devolver' : '';
+  const totalExtra = auxiliares.reduce((s, a) => s + horasExtra.filter(h => h.auxId === a.id).reduce((x,h) => x+h.horas, 0), 0);
+  badge.textContent = totalDeuda > 0 ? totalDeuda + 'h pendientes de devolver en total' : '';
 
-  if(auxConMovimientos.length === 0){
-    cont.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px">Sin registros de horas todavia</div>';
-    return;
+  // Mostrar TODAS las auxiliares ordenadas por saldo (mas horas debidas primero)
+  const sorted = [...auxiliares].sort((a, b) => getSaldoHoras(b.id) - getSaldoHoras(a.id));
+
+  // Resumen global primero
+  let html = '';
+  if(totalExtra > 0){
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">';
+    html += '<div><span style="font-size:18px;font-weight:700;font-family:Fraunces,serif;color:var(--terracota);display:block">' + totalExtra + 'h</span><span style="font-size:10px;color:var(--text-soft)">Total trabajadas</span></div>';
+    html += '<div><span style="font-size:18px;font-weight:700;font-family:Fraunces,serif;color:var(--red);display:block">' + totalDeuda + 'h</span><span style="font-size:10px;color:var(--text-soft)">Pendientes devolver</span></div>';
+    html += '<div><span style="font-size:18px;font-weight:700;font-family:Fraunces,serif;color:var(--sage);display:block">' + (totalExtra - totalDeuda) + 'h</span><span style="font-size:10px;color:var(--text-soft)">Ya reguladas</span></div>';
+    html += '</div>';
   }
 
-  // Ordenar por saldo descendente (mas horas debidas primero)
-  const sorted = [...auxConMovimientos].sort((a, b) => getSaldoHoras(b.id) - getSaldoHoras(a.id));
+  // Tabla completa de todas las auxiliares
+  html += '<div style="margin-bottom:6px;font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;display:grid;grid-template-columns:1fr 60px 60px 60px;gap:4px;padding:0 4px">';
+  html += '<span>Auxiliar</span><span style="text-align:center">+Extra</span><span style="text-align:center">-Reg.</span><span style="text-align:center">Saldo</span></div>';
 
-  cont.innerHTML = sorted.map(function(a, i){
+  html += sorted.map(function(a){
     const saldo = getSaldoHoras(a.id);
     const extra = horasExtra.filter(h => h.auxId === a.id).reduce((s, h) => s + h.horas, 0);
     const reg = horasRegulacion.filter(h => h.auxId === a.id).reduce((s, h) => s + h.horas, 0);
-    const color = saldo > 6 ? 'var(--red)' : saldo > 2 ? 'var(--amber)' : 'var(--sage)';
-    const bg = saldo > 6 ? 'rgba(192,84,122,0.08)' : saldo > 2 ? 'rgba(196,127,216,0.08)' : 'rgba(167,109,200,0.08)';
-    const border = saldo > 6 ? 'var(--red-dim)' : saldo > 2 ? 'var(--amber-dim)' : 'var(--sage-dim)';
+    const tieneMovimientos = extra > 0 || reg > 0;
+    const colorSaldo = saldo > 6 ? 'var(--red)' : saldo > 0 ? 'var(--amber)' : 'var(--sage)';
+    const bgRow = saldo > 6 ? 'rgba(192,84,122,0.06)' : saldo > 0 ? 'rgba(196,127,216,0.05)' : 'var(--bg3)';
+    const borderRow = saldo > 6 ? 'var(--red-dim)' : saldo > 0 ? 'var(--amber-dim)' : 'var(--border)';
     const initials = a.nombre.split(' ').map(function(n){return n[0];}).slice(0,2).join('');
+    const turnoLabel = a.turno === 'M' ? 'M' : a.turno === 'T' ? 'T' : 'N';
 
-    // Historial de esta auxiliar
+    // Historial de movimientos
     const movimientos = [
       ...horasExtra.filter(h => h.auxId === a.id).map(h => ({tipo:'extra', fecha:h.fecha, horas:h.horas, motivo:h.motivo})),
       ...horasRegulacion.filter(h => h.auxId === a.id).map(h => ({tipo:'reg', fecha:h.fecha, horas:h.horas}))
     ].sort((x,y) => x.fecha.localeCompare(y.fecha));
 
-    return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:12px;padding:11px 14px;margin-bottom:8px;animation:cardIn 0.3s ease forwards">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (movimientos.length > 0 ? '8px' : '0') + '">' +
-        '<div style="width:34px;height:34px;border-radius:50%;background:' + col(a.id) + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">' + initials + '</div>' +
-        '<div style="flex:1"><strong style="font-size:13px;color:var(--text);display:block">' + a.nombre + '</strong>' +
-        '<span style="font-size:11px;color:var(--text-soft)">+' + extra + 'h trabajadas · -' + reg + 'h reguladas</span></div>' +
-        '<div style="text-align:right"><span style="font-size:20px;font-weight:700;font-family:Fraunces,serif;color:' + color + '">' + saldo + 'h</span><br><span style="font-size:10px;color:var(--text-dim)">a devolver</span></div>' +
-      '</div>' +
-      (movimientos.length > 0 ? '<div style="display:flex;flex-wrap:wrap;gap:4px">' +
-        movimientos.map(function(m){
-          return '<span style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;background:' + (m.tipo==='extra' ? 'rgba(139,91,181,0.12)' : 'rgba(192,84,122,0.1)') + ';color:' + (m.tipo==='extra' ? 'var(--terracota)' : 'var(--red)') + '">' +
-            (m.tipo==='extra' ? '+' : '-') + m.horas + 'h · ' + formatFechaCorta(m.fecha) + (m.motivo ? ' · ' + m.motivo.split(' ')[0] : '') +
-          '</span>';
-        }).join('') +
-      '</div>' : '') +
-    '</div>';
+    let rowHtml = '<div style="background:' + bgRow + ';border:1px solid ' + borderRow + ';border-radius:10px;margin-bottom:5px;overflow:hidden">';
+
+    // Fila principal
+    rowHtml += '<div style="display:grid;grid-template-columns:1fr 60px 60px 60px;gap:4px;padding:9px 10px;align-items:center;cursor:' + (tieneMovimientos ? 'pointer' : 'default') + '" ' + (tieneMovimientos ? 'onclick="toggleHistorial(this)"' : '') + '>';
+    rowHtml += '<div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:' + col(a.id) + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">' + initials + '</div>';
+    rowHtml += '<div><strong style="font-size:12px;color:var(--text)">' + a.nombre.split(' ')[0] + ' ' + (a.nombre.split(' ')[1]||'') + '</strong>';
+    rowHtml += '<span style="display:block;font-size:10px;color:var(--text-dim)">' + turnoLabel + ' · ' + a.modulo.split(' ')[0] + '</span></div></div>';
+    rowHtml += '<span style="text-align:center;font-size:13px;font-weight:600;color:var(--terracota)">' + (extra > 0 ? '+' + extra + 'h' : '—') + '</span>';
+    rowHtml += '<span style="text-align:center;font-size:13px;font-weight:600;color:var(--red)">' + (reg > 0 ? '-' + reg + 'h' : '—') + '</span>';
+    rowHtml += '<span style="text-align:center;font-size:14px;font-weight:700;color:' + colorSaldo + '">' + saldo + 'h</span>';
+    rowHtml += '</div>';
+
+    // Historial desplegable
+    if(tieneMovimientos){
+      rowHtml += '<div class="historial-aux" style="display:none;border-top:1px solid var(--border);padding:8px 10px;background:var(--bg2)">';
+      rowHtml += '<div style="font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Historial completo</div>';
+      movimientos.forEach(function(m){
+        rowHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:0.5px solid var(--border);font-size:11px">';
+        rowHtml += '<span style="font-size:14px">' + (m.tipo==='extra' ? '➕' : '➖') + '</span>';
+        rowHtml += '<span style="color:var(--text-soft)">' + formatFechaCorta(m.fecha) + '</span>';
+        rowHtml += '<span style="font-weight:600;color:' + (m.tipo==='extra' ? 'var(--terracota)' : 'var(--red)') + '">' + (m.tipo==='extra' ? '+' : '-') + m.horas + 'h</span>';
+        rowHtml += '<span style="color:var(--text-dim)">' + (m.motivo || 'Regulacion') + '</span>';
+        rowHtml += '</div>';
+      });
+      rowHtml += '<div style="display:flex;justify-content:flex-end;margin-top:8px"><span style="font-size:12px;font-weight:700;color:' + colorSaldo + '">Saldo actual: ' + saldo + 'h</span></div>';
+      rowHtml += '</div>';
+    }
+
+    rowHtml += '</div>';
+    return rowHtml;
   }).join('');
 
-  // Orden de llamada sugerido (solo las que tienen saldo = 0, para llamar primero)
-  const disponibles = auxiliares.filter(a => getSaldoHoras(a.id) === 0)
-    .concat(auxiliares.filter(a => getSaldoHoras(a.id) > 0).sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id)));
+  // Orden de llamada
+  const conSaldo = auxiliares.filter(a => getSaldoHoras(a.id) >= 0).sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id));
+  html += '<div style="margin-top:12px;background:rgba(139,91,181,0.06);border:1px solid var(--border);border-radius:12px;padding:11px 14px">';
+  html += '<div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Orden justo para proxima urgencia</div>';
+  html += '<div style="font-size:12px;color:var(--text-soft);line-height:2">';
+  html += conSaldo.slice(0,8).map(function(a, i){
+    const saldo = getSaldoHoras(a.id);
+    return '<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;margin-bottom:2px">' +
+      '<strong style="color:var(--terracota)">' + (i+1) + '.</strong> ' + a.nombre.split(' ')[0] +
+      ' <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:rgba(139,91,181,0.1);color:var(--terracota)">' + saldo + 'h</span>' +
+      '</span>';
+  }).join('');
+  html += '</div></div>';
 
-  if(auxConMovimientos.length > 0){
-    cont.innerHTML += '<div style="margin-top:12px;background:rgba(139,91,181,0.06);border:1px solid var(--border);border-radius:12px;padding:11px 14px">' +
-      '<div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Orden de llamada sugerido (proxima urgencia)</div>' +
-      '<div style="font-size:12px;color:var(--text-soft);line-height:1.9">' +
-      auxiliares.filter(a => horasExtra.some(h => h.auxId === a.id) || horasRegulacion.some(h => h.auxId === a.id))
-        .sort((a,b) => getSaldoHoras(a.id) - getSaldoHoras(b.id))
-        .map(function(a, i){
-          const saldo = getSaldoHoras(a.id);
-          return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px;margin-bottom:4px">' +
-            '<strong style="color:var(--terracota)">' + (i+1) + '.</strong> ' + a.nombre.split(' ')[0] +
-            ' <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:rgba(139,91,181,0.1);color:var(--terracota)">' + saldo + 'h</span>' +
-          '</span>';
-        }).join('') +
-      '</div></div>';
-  }
+  cont.innerHTML = html;
+}
+
+function toggleHistorial(row){
+  const hist = row.nextElementSibling;
+  if(!hist) return;
+  hist.style.display = hist.style.display === 'none' ? 'block' : 'none';
 }
 
 // Inicializar fechas de horas
