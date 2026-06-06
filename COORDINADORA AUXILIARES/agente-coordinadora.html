@@ -1627,22 +1627,49 @@ function gsRequest(params) {
       url.searchParams.append(k, typeof v === 'string' ? v : JSON.stringify(v));
     });
     url.searchParams.append('callback', cbName);
-
     window[cbName] = function(data) {
       delete window[cbName];
-      document.head.removeChild(script);
+      try { document.head.removeChild(script); } catch(e) {}
       resolve(data);
     };
-
     const script = document.createElement('script');
     script.src = url.toString();
     script.onerror = function() {
       delete window[cbName];
-      document.head.removeChild(script);
+      try { document.head.removeChild(script); } catch(e) {}
       resolve(null);
     };
     document.head.appendChild(script);
+    setTimeout(() => {
+      if(window[cbName]) {
+        delete window[cbName];
+        try { document.head.removeChild(script); } catch(e) {}
+        resolve(null);
+      }
+    }, 10000);
+  });
+}
 
+function gsPost(action, data) {
+  return new Promise((resolve) => {
+    const cbName = 'gs_post_' + Date.now();
+    const url = new URL(GS_URL);
+    url.searchParams.append('action', action);
+    url.searchParams.append('data', typeof data === 'string' ? data : JSON.stringify(data));
+    url.searchParams.append('callback', cbName);
+    window[cbName] = function(result) {
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch(e) {}
+      resolve(result);
+    };
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = function() {
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch(e) {}
+      resolve(null);
+    };
+    document.head.appendChild(script);
     setTimeout(() => {
       if(window[cbName]) {
         delete window[cbName];
@@ -1746,26 +1773,26 @@ function mostrarGuardado() {
 
 async function gsGuardarAusencias() {
   if(!gsSyncEnabled) return;
-  await gsRequest({action: 'saveAusencias', data: JSON.stringify(ausencias)});
+  await gsPost('saveAusencias', ausencias);
   mostrarGuardado();
 }
 
 async function gsAddHoraExtra(hora) {
   if(!gsSyncEnabled) return;
-  await gsRequest({action: 'addHoraExtra', data: JSON.stringify(hora)});
+  await gsPost('addHoraExtra', hora);
   mostrarGuardado();
 }
 
 async function gsAddRegulacion(reg) {
   if(!gsSyncEnabled) return;
-  await gsRequest({action: 'addRegulacion', data: JSON.stringify(reg)});
+  await gsPost('addRegulacion', reg);
   mostrarGuardado();
 }
 
 async function gsAddIncidencia(inc) {
   if(!gsSyncEnabled) return;
   const incParaGuardar = {...inc, parte: JSON.stringify(inc.parte)};
-  await gsRequest({action: 'addIncidencia', data: JSON.stringify(incParaGuardar)});
+  await gsPost('addIncidencia', incParaGuardar);
   mostrarGuardado();
 }
 
