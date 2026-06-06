@@ -1616,25 +1616,50 @@ function renderIncidencias(){
 
 
 // ============ GOOGLE SHEETS SYNC ============
-const GS_URL = 'https://script.google.com/macros/s/AKfycbyjeqx5oM1WWNU3NxvPT2twl0N6M8IKcexs-HXZxz3QCLrkWAY4gf0d0i9LwCF_BQQ/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyaPMIlvqYgthWMzXBGJYavmwgdngyX3urvY8Oyok2FExgISBhm8E8jxfsq1n-Dd8c/exec';
 let gsSyncEnabled = false;
 
-async function gsRequest(params) {
-  try {
+function gsRequest(params) {
+  return new Promise((resolve) => {
+    const cbName = 'gs_cb_' + Date.now();
     const url = new URL(GS_URL);
-    Object.entries(params).forEach(([k,v]) => url.searchParams.append(k, v));
-    const res = await fetch(url.toString());
-    const data = await res.json();
-    return data;
-  } catch(e) {
-    console.error('GS Error:', e);
-    return null;
-  }
+    Object.entries(params).forEach(([k,v]) => {
+      url.searchParams.append(k, typeof v === 'string' ? v : JSON.stringify(v));
+    });
+    url.searchParams.append('callback', cbName);
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = function() {
+      delete window[cbName];
+      document.head.removeChild(script);
+      resolve(null);
+    };
+    document.head.appendChild(script);
+
+    setTimeout(() => {
+      if(window[cbName]) {
+        delete window[cbName];
+        try { document.head.removeChild(script); } catch(e) {}
+        resolve(null);
+      }
+    }, 10000);
+  });
+}
+
+async function gsRequestWithData(params) {
+  return gsRequest(params);
 }
 
 async function cargarDatosDesdeSheets() {
   mostrarCargando(true);
-  const data = await gsRequest({action: 'getAll'});
+  const data = await gsRequestWithData({action: 'getAll'});
   if(!data || data.error) {
     console.log('No se pudo cargar desde Sheets, usando datos locales');
     mostrarCargando(false);
