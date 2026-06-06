@@ -785,8 +785,8 @@ function registrarAusenciaRapida(){
   }
   const aux = auxiliares.find(a=>a.id===auxId);
   ausencias.push({ auxId, turno: turno||aux.turno, fechaInicio, fechaFin, tipo, motivo: getTipoLabel(tipo) });
-  gsGuardarAusencias();
   renderEquipo();
+  gsPost('saveAusencias', ausencias);
   document.getElementById('qa-aux').value='';
   document.getElementById('qa-motivo').value='';
   document.getElementById('qa-fecha').value=hoy;
@@ -796,8 +796,8 @@ function registrarAusenciaRapida(){
 }
 function borrarAusencia(auxId, fechaInicio){
   ausencias = ausencias.filter(a=>!(a.auxId===auxId&&a.fechaInicio===fechaInicio));
-  gsGuardarAusencias();
   renderEquipo();
+  gsPost('saveAusencias', ausencias);
 }
 
 // ============ MODAL ============
@@ -1380,8 +1380,8 @@ function registrarHorasExtra(){
   if(!auxId || !fecha){ alert('Selecciona auxiliar y fecha.'); return; }
   const nuevaHora = {auxId, fecha, horas, motivo};
   horasExtra.push(nuevaHora);
-  gsAddHoraExtra(nuevaHora);
   renderSaldoHoras();
+  gsPost('addHoraExtra', nuevaHora);
   document.getElementById('he-aux').value = '';
   document.getElementById('he-fecha').value = hoy;
 }
@@ -1399,8 +1399,8 @@ function registrarRegulacion(){
   }
   const nuevaReg = {auxId, fecha, horas};
   horasRegulacion.push(nuevaReg);
-  gsAddRegulacion(nuevaReg);
   renderSaldoHoras();
+  gsPost('addRegulacion', nuevaReg);
   document.getElementById('hr-aux').value = '';
   document.getElementById('hr-fecha').value = hoy;
 }
@@ -1547,8 +1547,9 @@ async function registrarIncidencia(){
 
     const inc = { id: Date.now(), fecha, turno, residente, tipo, descripcion, parte: r };
     incidencias.unshift(inc);
-    gsAddIncidencia(inc);
     renderIncidencias();
+    const incParaGuardar = {...inc, parte: JSON.stringify(inc.parte)};
+    gsPost('addIncidencia', incParaGuardar);
 
     // Limpiar formulario
     document.getElementById('inc-residente').value = '';
@@ -1689,6 +1690,7 @@ async function cargarDatosDesdeSheets() {
   const data = await gsRequestWithData({action: 'getAll'});
   if(!data || data.error) {
     console.log('No se pudo cargar desde Sheets, usando datos locales');
+    gsSyncEnabled = true; // Activar sync aunque no haya datos todavia
     mostrarCargando(false);
     return;
   }
