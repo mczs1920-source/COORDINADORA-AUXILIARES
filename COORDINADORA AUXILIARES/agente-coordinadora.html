@@ -785,6 +785,7 @@ function registrarAusenciaRapida(){
   }
   const aux = auxiliares.find(a=>a.id===auxId);
   ausencias.push({ auxId, turno: turno||aux.turno, fechaInicio, fechaFin, tipo, motivo: getTipoLabel(tipo) });
+  gsGuardarAusencias();
   renderEquipo();
   document.getElementById('qa-aux').value='';
   document.getElementById('qa-motivo').value='';
@@ -795,6 +796,7 @@ function registrarAusenciaRapida(){
 }
 function borrarAusencia(auxId, fechaInicio){
   ausencias = ausencias.filter(a=>!(a.auxId===auxId&&a.fechaInicio===fechaInicio));
+  gsGuardarAusencias();
   renderEquipo();
 }
 
@@ -1376,7 +1378,9 @@ function registrarHorasExtra(){
   const horas = parseInt(document.getElementById('he-horas').value);
   const motivo = document.getElementById('he-motivo').value;
   if(!auxId || !fecha){ alert('Selecciona auxiliar y fecha.'); return; }
-  horasExtra.push({auxId, fecha, horas, motivo});
+  const nuevaHora = {auxId, fecha, horas, motivo};
+  horasExtra.push(nuevaHora);
+  gsAddHoraExtra(nuevaHora);
   renderSaldoHoras();
   document.getElementById('he-aux').value = '';
   document.getElementById('he-fecha').value = hoy;
@@ -1393,7 +1397,9 @@ function registrarRegulacion(){
     alert((aux ? aux.nombre : 'Esta auxiliar') + ' solo tiene ' + saldo + ' hora' + (saldo !== 1 ? 's' : '') + ' acumulada' + (saldo !== 1 ? 's' : '') + '. No puedes descontar ' + horas + '.');
     return;
   }
-  horasRegulacion.push({auxId, fecha, horas});
+  const nuevaReg = {auxId, fecha, horas};
+  horasRegulacion.push(nuevaReg);
+  gsAddRegulacion(nuevaReg);
   renderSaldoHoras();
   document.getElementById('hr-aux').value = '';
   document.getElementById('hr-fecha').value = hoy;
@@ -1541,6 +1547,7 @@ async function registrarIncidencia(){
 
     const inc = { id: Date.now(), fecha, turno, residente, tipo, descripcion, parte: r };
     incidencias.unshift(inc);
+    gsAddIncidencia(inc);
     renderIncidencias();
 
     // Limpiar formulario
@@ -1607,10 +1614,144 @@ function renderIncidencias(){
   }).join('');
 }
 
+
+// ============ GOOGLE SHEETS SYNC ============
+const GS_URL = 'https://script.google.com/macros/s/AKfycbwwh-oRgIKM0vGqzfx9Kzcux3cJgcskZKoievgqPKHqQ4lT8HHepQh2T9Llpu6rpUk/exec';
+let gsSyncEnabled = false;
+
+async function gsRequest(params) {
+  try {
+    const url = new URL(GS_URL);
+    Object.entries(params).forEach(([k,v]) => url.searchParams.append(k, v));
+    const res = await fetch(url.toString());
+    const data = await res.json();
+    return data;
+  } catch(e) {
+    console.error('GS Error:', e);
+    return null;
+  }
+}
+
+async function cargarDatosDesdeSheets() {
+  mostrarCargando(true);
+  const data = await gsRequest({action: 'getAll'});
+  if(!data || data.error) {
+    console.log('No se pudo cargar desde Sheets, usando datos locales');
+    mostrarCargando(false);
+    return;
+  }
+  gsSyncEnabled = true;
+
+  // Cargar ausencias
+  if(data.ausencias && data.ausencias.length > 0) {
+    ausencias = data.ausencias.map(a => ({
+      auxId: parseInt(a.auxId),
+      turno: a.turno,
+      fechaInicio: a.fechaInicio,
+      fechaFin: a.fechaFin || a.fechaInicio,
+      tipo: a.tipo,
+      motivo: a.motivo
+    }));
+  }
+
+  // Cargar horas extra
+  if(data.horasExtra && data.horasExtra.length > 0) {
+    horasExtra = data.horasExtra.map(h => ({
+      auxId: parseInt(h.auxId),
+      fecha: h.fecha,
+      horas: parseInt(h.horas),
+      motivo: h.motivo
+    }));
+  }
+
+  // Cargar regulaciones
+  if(data.regulaciones && data.regulaciones.length > 0) {
+    horasRegulacion = data.regulaciones.map(r => ({
+      auxId: parseInt(r.auxId),
+      fecha: r.fecha,
+      horas: parseInt(r.horas)
+    }));
+  }
+
+  // Cargar incidencias
+  if(data.incidencias && data.incidencias.length > 0) {
+    incidencias = data.incidencias.map(inc => ({
+      id: inc.id || Date.now(),
+      fecha: inc.fecha,
+      turno: inc.turno,
+      residente: inc.residente,
+      tipo: inc.tipo,
+      descripcion: inc.descripcion,
+      parte: inc.parte ? JSON.parse(inc.parte) : {}
+    }));
+  }
+
+  mostrarCargando(false);
+  renderEquipo();
+  updateHorasSelects();
+  renderSaldoHoras();
+  renderIncidencias();
+  console.log('Datos cargados desde Google Sheets OK');
+}
+
+function mostrarCargando(show) {
+  let el = document.getElementById('gs-loading');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'gs-loading';
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--terracota);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:200;display:none';
+    el.textContent = '💜 Cargando datos...';
+    document.body.appendChild(el);
+  }
+  el.style.display = show ? 'block' : 'none';
+}
+
+function mostrarGuardado() {
+  let el = document.getElementById('gs-saved');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'gs-saved';
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--sage-dim);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:200;opacity:0;transition:opacity 0.3s';
+    document.body.appendChild(el);
+  }
+  el.textContent = '✅ Guardado';
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 2000);
+}
+
+async function gsGuardarAusencias() {
+  if(!gsSyncEnabled) return;
+  await gsRequest({action: 'saveAusencias', data: JSON.stringify(ausencias)});
+  mostrarGuardado();
+}
+
+async function gsAddHoraExtra(hora) {
+  if(!gsSyncEnabled) return;
+  await gsRequest({action: 'addHoraExtra', data: JSON.stringify(hora)});
+  mostrarGuardado();
+}
+
+async function gsAddRegulacion(reg) {
+  if(!gsSyncEnabled) return;
+  await gsRequest({action: 'addRegulacion', data: JSON.stringify(reg)});
+  mostrarGuardado();
+}
+
+async function gsAddIncidencia(inc) {
+  if(!gsSyncEnabled) return;
+  const incParaGuardar = {...inc, parte: JSON.stringify(inc.parte)};
+  await gsRequest({action: 'addIncidencia', data: JSON.stringify(incParaGuardar)});
+  mostrarGuardado();
+}
+
 // ============ INIT ============
 renderEquipo();
 updateHorasSelects();
 renderSaldoHoras();
+// Cargar datos desde Google Sheets al iniciar
+window.addEventListener('DOMContentLoaded', function() {
+  cargarDatosDesdeSheets();
+});
 function activarSinCobertura() { mostrarPanelRedistribucion(); }
 </script>
 </body>
