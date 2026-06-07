@@ -396,51 +396,7 @@ header { position: sticky; top:0; z-index:100; background: rgba(245,240,250,0.97
     <div id="planillaResultado" style="margin-top:12px"></div>
   </div>
 
-  <!-- INCIDENCIAS -->
-  <div class="ausencia-quick" id="secIncidencias">
-    <h3><span>📝 Registro de incidencias</span></h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Fecha</label>
-        <input type="date" id="inc-fecha" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Turno</label>
-        <select id="inc-turno" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
-          <option value="M">🌅 Mañana</option>
-          <option value="T">☀️ Tarde</option>
-          <option value="N">🌙 Noche</option>
-        </select>
-      </div>
-    </div>
-    <div style="margin-bottom:8px">
-      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Módulo y residente afectado</label>
-      <input type="text" id="inc-residente" placeholder="Ej: Módulo 3 · Residente: Carmen R." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
-    </div>
-    <div style="margin-bottom:8px">
-      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Tipo de incidencia</label>
-      <select id="inc-tipo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none">
-        <option value="">— Selecciona —</option>
-        <option>Caída</option>
-        <option>Agitación / conducta</option>
-        <option>Negativa a comer</option>
-        <option>Negativa a medicación</option>
-        <option>Úlcera o lesión cutánea</option>
-        <option>Desorientación severa</option>
-        <option>Conflicto entre residentes</option>
-        <option>Queja de familia</option>
-        <option>Otro</option>
-      </select>
-    </div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:5px">Descripción</label>
-      <textarea id="inc-descripcion" placeholder="Describe lo ocurrido con detalle..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;resize:none;min-height:70px"></textarea>
-    </div>
-    <button class="btn-ausencia" onclick="registrarIncidencia()" style="background:linear-gradient(135deg,rgba(139,107,174,0.2),rgba(139,107,174,0.05));border-color:#5A3A7A;color:#B48ED4">
-      📝 Registrar y generar parte con IA
-    </button>
-    <div id="listaIncidencias" style="margin-top:12px"></div>
-  </div>
+
 
   <!-- INFORME SEMANAL -->
   <div class="ausencia-quick" id="secInforme">
@@ -785,8 +741,8 @@ function registrarAusenciaRapida(){
   }
   const aux = auxiliares.find(a=>a.id===auxId);
   ausencias.push({ auxId, turno: turno||aux.turno, fechaInicio, fechaFin, tipo, motivo: getTipoLabel(tipo) });
+  guardarDatosLocal();
   renderEquipo();
-  gsPost('saveAusencias', ausencias);
   document.getElementById('qa-aux').value='';
   document.getElementById('qa-motivo').value='';
   document.getElementById('qa-fecha').value=hoy;
@@ -796,8 +752,8 @@ function registrarAusenciaRapida(){
 }
 function borrarAusencia(auxId, fechaInicio){
   ausencias = ausencias.filter(a=>!(a.auxId===auxId&&a.fechaInicio===fechaInicio));
+  guardarDatosLocal();
   renderEquipo();
-  gsPost('saveAusencias', ausencias);
 }
 
 // ============ MODAL ============
@@ -1115,6 +1071,7 @@ Devuelve SOLO un JSON sin backticks:
     const clean = raw.replace(/```json|```/g, '').trim();
     const r = JSON.parse(clean);
     r.planRedistribucion.forEach(p => { const aux = auxiliares.find(a => a.nombre === p.nombreAuxiliar); if (aux) cargaExtra[aux.id] = (cargaExtra[aux.id] || 0) + 1; });
+    guardarDatosLocal();
     renderPlanRedistribucion(r, turno, modulo);
   } catch(e) {
     resultado.innerHTML = `<div style="color:var(--red);font-size:13px;padding:12px">❌ Error al generar el plan: ${e.message}. Inténtalo de nuevo.</div>`;
@@ -1380,8 +1337,8 @@ function registrarHorasExtra(){
   if(!auxId || !fecha){ alert('Selecciona auxiliar y fecha.'); return; }
   const nuevaHora = {auxId, fecha, horas, motivo};
   horasExtra.push(nuevaHora);
+  guardarDatosLocal();
   renderSaldoHoras();
-  gsPost('addHoraExtra', nuevaHora);
   document.getElementById('he-aux').value = '';
   document.getElementById('he-fecha').value = hoy;
 }
@@ -1399,8 +1356,8 @@ function registrarRegulacion(){
   }
   const nuevaReg = {auxId, fecha, horas};
   horasRegulacion.push(nuevaReg);
+  guardarDatosLocal();
   renderSaldoHoras();
-  gsPost('addRegulacion', nuevaReg);
   document.getElementById('hr-aux').value = '';
   document.getElementById('hr-fecha').value = hoy;
 }
@@ -1514,298 +1471,12 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 
-// ============ INCIDENCIAS ============
-let incidencias = [];
-
-async function registrarIncidencia(){
-  const fecha = document.getElementById('inc-fecha').value;
-  const turno = document.getElementById('inc-turno').value;
-  const residente = document.getElementById('inc-residente').value.trim();
-  const tipo = document.getElementById('inc-tipo').value;
-  const descripcion = document.getElementById('inc-descripcion').value.trim();
-  if(!fecha || !tipo || !descripcion){ alert('Rellena fecha, tipo y descripcion.'); return; }
-
-  const btn = document.querySelector('[onclick="registrarIncidencia()"]');
-  btn.disabled = true;
-  btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(139,107,174,0.3);border-top-color:#B48ED4;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px"></span> Generando parte...';
-
-  const turnoNom = turno === 'M' ? 'Manana' : turno === 'T' ? 'Tarde' : 'Noche';
-  const prompt = 'Eres un agente de coordinacion geriatrica. Genera un parte de incidencia formal y profesional.\n\nDATOS:\nFecha: ' + fecha + '\nTurno: ' + turnoNom + '\nLugar/Residente: ' + (residente || 'No especificado') + '\nTipo: ' + tipo + '\nDescripcion: ' + descripcion + '\n\nDevuelve SOLO este JSON sin backticks:\n{\n  "parteFormato": "string (parte formal completo listo para imprimir o archivar)",\n  "accionesInmediatas": ["string"],\n  "notificarA": ["string (a quien hay que avisar: enfermeria, familia, medico, etc.)"],\n  "seguimientoRecomendado": "string",\n  "nivelGravedad": "leve"|"moderado"|"grave"\n}';
-
-  try {
-    const apiKey = getApiKey();
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey, 'HTTP-Referer': 'https://mczs1920-source.github.io', 'X-Title': 'Cuida IA - Agente Coordinadora' },
-      body: JSON.stringify({ model: 'anthropic/claude-sonnet-4-5', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
-    });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const raw = data.choices[0].message.content;
-    const clean = raw.replace(/```json|```/g,'').trim();
-    const r = JSON.parse(clean);
-
-    const inc = { id: Date.now(), fecha, turno, residente, tipo, descripcion, parte: r };
-    incidencias.unshift(inc);
-    renderIncidencias();
-    const incParaGuardar = {...inc, parte: JSON.stringify(inc.parte)};
-    gsPost('addIncidencia', incParaGuardar);
-
-    // Limpiar formulario
-    document.getElementById('inc-residente').value = '';
-    document.getElementById('inc-tipo').value = '';
-    document.getElementById('inc-descripcion').value = '';
-
-  } catch(e) {
-    alert('Error al generar el parte: ' + e.message);
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '📝 Registrar y generar parte con IA';
-}
-
-function renderIncidencias(){
-  const cont = document.getElementById('listaIncidencias');
-  if(incidencias.length === 0){ cont.innerHTML = ''; return; }
-
-  const colGravedad = { leve: 'var(--sage)', moderado: 'var(--amber)', grave: 'var(--red)' };
-  const bgGravedad = { leve: 'rgba(167,109,200,0.08)', moderado: 'rgba(196,127,216,0.12)', grave: 'rgba(192,84,122,0.1)' };
-  const borderGravedad = { leve: 'var(--sage-dim)', moderado: 'var(--amber-dim)', grave: 'var(--red-dim)' };
-  const iconGravedad = { leve: '🟡', moderado: '🟠', grave: '🔴' };
-  const turnoNom = { M: 'Manana', T: 'Tarde', N: 'Noche' };
-
-  cont.innerHTML = incidencias.map(function(inc){
-    const r = inc.parte;
-    const gravedad = r.nivelGravedad || 'leve';
-    return '<div style="background:' + (bgGravedad[gravedad]||'rgba(167,109,200,0.08)') + ';border:1px solid ' + (borderGravedad[gravedad]||'var(--border)') + ';border-radius:12px;padding:12px 14px;margin-bottom:10px;animation:cardIn 0.3s ease forwards">' +
-
-      // Cabecera
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
-        '<span style="font-size:16px">' + (iconGravedad[gravedad]||'🟡') + '</span>' +
-        '<div style="flex:1">' +
-          '<strong style="font-size:13px;color:var(--text);display:block">' + inc.tipo + (inc.residente ? ' · ' + inc.residente : '') + '</strong>' +
-          '<span style="font-size:11px;color:var(--text-soft)">' + formatFechaCorta(inc.fecha) + ' · Turno ' + (turnoNom[inc.turno]||inc.turno) + '</span>' +
-        '</div>' +
-        '<span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:' + (bgGravedad[gravedad]||'rgba(167,109,200,0.1)') + ';color:' + (colGravedad[gravedad]||'var(--sage)') + ';border:1px solid ' + (borderGravedad[gravedad]||'var(--border)') + '">' + gravedad.toUpperCase() + '</span>' +
-      '</div>' +
-
-      // Acciones inmediatas
-      (r.accionesInmediatas && r.accionesInmediatas.length > 0 ?
-        '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Acciones inmediatas</div>' +
-        r.accionesInmediatas.map(function(a){ return '<div style="font-size:11px;color:var(--text-soft);padding:2px 0">▸ ' + a + '</div>'; }).join('') +
-        '</div>' : '') +
-
-      // Notificar a
-      (r.notificarA && r.notificarA.length > 0 ?
-        '<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px">' +
-        r.notificarA.map(function(n){ return '<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(139,91,181,0.1);color:var(--terracota);font-weight:600">📢 ' + n + '</span>'; }).join('') +
-        '</div>' : '') +
-
-      // Parte formal con boton copiar
-      '<div style="font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Parte formal</div>' +
-      '<div class="parte-box" style="font-size:11px;line-height:1.8">' + r.parteFormato +
-        '<button class="copy-btn" onclick="copyText(this,\'' + encodeMsg(r.parteFormato) + '\')">📋 Copiar</button>' +
-      '</div>' +
-
-      // Seguimiento
-      (r.seguimientoRecomendado ?
-        '<div style="margin-top:8px;font-size:11px;color:var(--text-soft);line-height:1.6;padding:6px 10px;background:rgba(139,91,181,0.05);border-radius:8px">💡 ' + r.seguimientoRecomendado + '</div>' : '') +
-
-    '</div>';
-  }).join('');
-}
-
-
-// ============ GOOGLE SHEETS SYNC ============
-const GS_URL = 'https://script.google.com/macros/s/AKfycby4u4HRY1OrF4Cxc7kN8aVt8Sf4X-R1lwpXkxSnu-nrDtgOXeKI5Pc7osExbeosglQ/exec';
-let gsSyncEnabled = false;
-
-function gsRequest(params) {
-  return new Promise((resolve) => {
-    const cbName = 'gs_cb_' + Date.now();
-    const url = new URL(GS_URL);
-    Object.entries(params).forEach(([k,v]) => {
-      url.searchParams.append(k, typeof v === 'string' ? v : JSON.stringify(v));
-    });
-    url.searchParams.append('callback', cbName);
-    window[cbName] = function(data) {
-      delete window[cbName];
-      try { document.head.removeChild(script); } catch(e) {}
-      resolve(data);
-    };
-    const script = document.createElement('script');
-    script.src = url.toString();
-    script.onerror = function() {
-      delete window[cbName];
-      try { document.head.removeChild(script); } catch(e) {}
-      resolve(null);
-    };
-    document.head.appendChild(script);
-    setTimeout(() => {
-      if(window[cbName]) {
-        delete window[cbName];
-        try { document.head.removeChild(script); } catch(e) {}
-        resolve(null);
-      }
-    }, 10000);
-  });
-}
-
-function gsPost(action, data) {
-  return new Promise((resolve) => {
-    const cbName = 'gs_post_' + Date.now();
-    const url = new URL(GS_URL);
-    url.searchParams.append('action', action);
-    url.searchParams.append('data', typeof data === 'string' ? data : JSON.stringify(data));
-    url.searchParams.append('callback', cbName);
-    window[cbName] = function(result) {
-      delete window[cbName];
-      try { document.head.removeChild(script); } catch(e) {}
-      resolve(result);
-    };
-    const script = document.createElement('script');
-    script.src = url.toString();
-    script.onerror = function() {
-      delete window[cbName];
-      try { document.head.removeChild(script); } catch(e) {}
-      resolve(null);
-    };
-    document.head.appendChild(script);
-    setTimeout(() => {
-      if(window[cbName]) {
-        delete window[cbName];
-        try { document.head.removeChild(script); } catch(e) {}
-        resolve(null);
-      }
-    }, 10000);
-  });
-}
-
-async function gsRequestWithData(params) {
-  return gsRequest(params);
-}
-
-async function cargarDatosDesdeSheets() {
-  mostrarCargando(true);
-  const data = await gsRequestWithData({action: 'getAll'});
-  if(!data || data.error) {
-    console.log('No se pudo cargar desde Sheets, usando datos locales');
-    gsSyncEnabled = true; // Activar sync aunque no haya datos todavia
-    mostrarCargando(false);
-    return;
-  }
-  gsSyncEnabled = true;
-
-  // Cargar ausencias
-  if(data.ausencias && data.ausencias.length > 0) {
-    ausencias = data.ausencias.map(a => ({
-      auxId: parseInt(a.auxId),
-      turno: a.turno,
-      fechaInicio: a.fechaInicio,
-      fechaFin: a.fechaFin || a.fechaInicio,
-      tipo: a.tipo,
-      motivo: a.motivo
-    }));
-  }
-
-  // Cargar horas extra
-  if(data.horasExtra && data.horasExtra.length > 0) {
-    horasExtra = data.horasExtra.map(h => ({
-      auxId: parseInt(h.auxId),
-      fecha: h.fecha,
-      horas: parseInt(h.horas),
-      motivo: h.motivo
-    }));
-  }
-
-  // Cargar regulaciones
-  if(data.regulaciones && data.regulaciones.length > 0) {
-    horasRegulacion = data.regulaciones.map(r => ({
-      auxId: parseInt(r.auxId),
-      fecha: r.fecha,
-      horas: parseInt(r.horas)
-    }));
-  }
-
-  // Cargar incidencias
-  if(data.incidencias && data.incidencias.length > 0) {
-    incidencias = data.incidencias.map(inc => ({
-      id: inc.id || Date.now(),
-      fecha: inc.fecha,
-      turno: inc.turno,
-      residente: inc.residente,
-      tipo: inc.tipo,
-      descripcion: inc.descripcion,
-      parte: inc.parte ? JSON.parse(inc.parte) : {}
-    }));
-  }
-
-  mostrarCargando(false);
-  renderEquipo();
-  updateHorasSelects();
-  renderSaldoHoras();
-  renderIncidencias();
-  console.log('Datos cargados desde Google Sheets OK');
-}
-
-function mostrarCargando(show) {
-  let el = document.getElementById('gs-loading');
-  if(!el) {
-    el = document.createElement('div');
-    el.id = 'gs-loading';
-    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--terracota);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:200;display:none';
-    el.textContent = '💜 Cargando datos...';
-    document.body.appendChild(el);
-  }
-  el.style.display = show ? 'block' : 'none';
-}
-
-function mostrarGuardado() {
-  let el = document.getElementById('gs-saved');
-  if(!el) {
-    el = document.createElement('div');
-    el.id = 'gs-saved';
-    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--sage-dim);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:200;opacity:0;transition:opacity 0.3s';
-    document.body.appendChild(el);
-  }
-  el.textContent = '✅ Guardado';
-  el.style.opacity = '1';
-  setTimeout(() => el.style.opacity = '0', 2000);
-}
-
-async function gsGuardarAusencias() {
-  if(!gsSyncEnabled) return;
-  await gsPost('saveAusencias', ausencias);
-  mostrarGuardado();
-}
-
-async function gsAddHoraExtra(hora) {
-  if(!gsSyncEnabled) return;
-  await gsPost('addHoraExtra', hora);
-  mostrarGuardado();
-}
-
-async function gsAddRegulacion(reg) {
-  if(!gsSyncEnabled) return;
-  await gsPost('addRegulacion', reg);
-  mostrarGuardado();
-}
-
-async function gsAddIncidencia(inc) {
-  if(!gsSyncEnabled) return;
-  const incParaGuardar = {...inc, parte: JSON.stringify(inc.parte)};
-  await gsPost('addIncidencia', incParaGuardar);
-  mostrarGuardado();
-}
 
 // ============ INIT ============
+cargarDatosLocal();
 renderEquipo();
 updateHorasSelects();
 renderSaldoHoras();
-// Cargar datos desde Google Sheets al iniciar
-window.addEventListener('DOMContentLoaded', function() {
-  cargarDatosDesdeSheets();
-});
 function activarSinCobertura() { mostrarPanelRedistribucion(); }
 </script>
 </body>
