@@ -1472,6 +1472,38 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+// ============ LOCAL STORAGE PERSISTENCIA ============
+const LS_KEY = 'cuida_ia_coordinadora_datos';
+
+function guardarDatosLocal() {
+  try {
+    const datos = {
+      ausencias: ausencias,
+      horasExtra: horasExtra,
+      horasRegulacion: horasRegulacion,
+      cargaExtra: cargaExtra
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(datos));
+  } catch(e) {
+    console.error('Error guardando datos:', e);
+  }
+}
+
+function cargarDatosLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const datos = JSON.parse(raw);
+    if(datos.ausencias) ausencias = datos.ausencias;
+    if(datos.horasExtra) horasExtra = datos.horasExtra;
+    if(datos.horasRegulacion) horasRegulacion = datos.horasRegulacion;
+    if(datos.cargaExtra) cargaExtra = datos.cargaExtra;
+    console.log('Datos cargados desde localStorage OK');
+  } catch(e) {
+    console.error('Error cargando datos:', e);
+  }
+}
+
 // ============ INIT ============
 cargarDatosLocal();
 renderEquipo();
